@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QuickMart — Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    :root{
+      --bg:#ffffff; --surface:#f6f7f9; --ink:#111; --muted:#5f6368; --accent:#06c167; --accent2:#0077ff; --danger:#d32f2f; --wire:#e5e7eb; --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:14px; --radius-sm:10px; --radius-lg:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+
+    /* Header */
+    header.h{position:sticky;top:0;z-index:5;backdrop-filter:saturate(140%) blur(10px);background:linear-gradient(90deg, rgba(255,255,255,.9), rgba(250,250,255,.9));border-bottom:1px solid var(--wire)}
+    .bar{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:800}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(6,193,103,.12)}
+
+    /* Layout */
+    .wrap{max-width:1100px;margin:24px auto;padding:0 18px;display:grid;gap:20px}
+    .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .pad{padding:18px}
+
+    h1{font-size:24px;margin:0}
+    h2{font-size:20px;margin:0}
+    .lead{color:var(--muted)}
+
+    /* Controls */
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .field{display:flex;align-items:center;gap:8px;background:transparent;border:none;border-radius:999px;padding:8px 0;box-shadow:none}
+    .field input{border:none;outline:none;background:rgba(255,255,255,.6);padding:10px 14px;min-width:260px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+    select{padding:10px;border:1px solid var(--wire);border-radius:10px;background:#fff}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--wire);background:var(--surface);color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s;text-decoration:none;font-weight:600}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.primary:hover{background:#04a85a;border-color:#04a85a}
+    .btn.blue{background:var(--accent2);border-color:var(--accent2);color:#fff}
+    .btn.sm{padding:6px 10px;font-size:13px;border-radius:10px}
+    .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+
+    /* Forms */
+    form.grid{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:10px;align-items:stretch}
+    input[type=text], input[type=email], input[type=password]{padding:10px;border:1px solid var(--wire);border-radius:10px;width:100%}
+    .form-actions{display:flex;gap:10px;align-items:center}
+
+    /* Table */
+    .table-wrap{overflow:auto;border:1px solid var(--wire);border-radius:12px}
+    table{width:100%;border-collapse:collapse;min-width:720px;background:#fff}
+    th,td{border-bottom:1px solid var(--wire);padding:10px 12px;text-align:center;font-size:14px}
+    thead th{position:sticky;top:0;background:var(--surface);text-transform:uppercase;font-size:12px;letter-spacing:.08em;color:var(--muted);z-index:1}
+    tbody tr:hover td{background:#fafafa}
+    th.sortable{cursor:pointer}
+
+    .count{font-size:13px;color:var(--muted)}
+
+    @media (max-width:900px){ form.grid{grid-template-columns:1fr 1fr auto} }
+    @media (max-width:600px){ form.grid{grid-template-columns:1fr} .field input{min-width:0;width:100%} }
+
+    @media print{
+      header.h,.toolbar,.btn,.form-actions{display:none}
+      .wrap{margin:0}
+      .card{box-shadow:none;border-color:#ddd}
+    }
+  </style>
+</head>
+<body>
+<header class="h">
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> QuickMart</div>
+    <div class="toolbar">
+      <button type="button" class="btn blue sm" id="csvBtn">Export CSV</button>
+      <form th:action="@{/logout}" method="get" style="display:inline">
+        <button type="submit" class="btn danger sm">Logout</button>
+      </form>
+    </div>
+    <div class="lead" th:text="${'User: ' + (session.loggedInUser != null ? session.loggedInUser.username : 'Guest')}"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card pad">
+    <h1>Admin Dashboard</h1>
+    <div class="count" id="userCount">Showing 0 user(s)</div>
+
+    <h2 style="margin-top:12px">Add / Update User</h2>
+    <form th:action="@{/admin/save}" method="post" th:object="${newUser}" class="grid" autocomplete="off">
+      <input type="hidden" id="userIdHidden">
+      <input type="text" th:field="*{username}" placeholder="Username" required>
+      <input type="email" th:field="*{email}" placeholder="Email" required>
+      <input type="password" th:field="*{password}" placeholder="Password (leave blank to keep)" autocomplete="new-password">
+      <select th:field="*{role}">
+        <option value="Customer">Customer</option>
+        <option value="Administrator">Administrator</option>
+        <option value="Payment_Manager">Payment Manager</option>
+        <option value="Marketing_Manager">Marketing Manager</option>
+        <option value="Inventory_Manager">Inventory Manager</option>
+        <option value="Delivery_Coordinator">Delivery Coordinator</option>
+      </select>
+      <button type="submit" class="btn primary" style="align-self:stretch">Save</button>
+    </form>
+  </section>
+
+  <section class="card pad">
+    <h2>User List</h2>
+    <div class="toolbar" style="margin-top:8px">
+      <div class="field" role="search">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.867-3.834zM12 6.5a5.5 5.5 0 1 1-11 0a5.5 5.5 0 0 1 11 0"/></svg>
+        <input id="searchBox" type="text" placeholder="Search username or email" aria-label="Search" />
+      </div>
+      <label class="lead" for="roleFilter">Role</label>
+      <select id="roleFilter" aria-label="Filter by role">
+        <option value="">All Roles</option>
+        <option value="Customer">Customer</option>
+        <option value="Administrator">Administrator</option>
+        <option value="Payment_Manager">Payment Manager</option>
+        <option value="Marketing_Manager">Marketing Manager</option>
+        <option value="Inventory_Manager">Inventory Manager</option>
+        <option value="Delivery_Coordinator">Delivery Coordinator</option>
+      </select>
+      <button type="button" class="btn sm" id="resetBtn">Clear</button>
+    </div>
+    <div class="table-wrap" style="margin-top:8px">
+      <table id="userTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th class="sortable" onclick="sortTable(1)">Username</th>
+            <th class="sortable" onclick="sortTable(2)">Email</th>
+            <th class="sortable" onclick="sortTable(3)">Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="user : ${users}" th:attr="data-role=${user.role}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.role}"></td>
+            <td class="actions" style="display:flex;gap:8px;justify-content:center">
+              <a href="#" th:attr="data-id=${user.id},data-username=${user.username},data-email=${user.email},data-role=${user.role}" onclick="fillFromRow(this)">Edit</a>
+              <a th:href="@{'/admin/delete/' + ${user.id}}" class="delete" onclick="return confirm('Delete this user?')">Delete</a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  function fillFromRow(el){
+    const { id, username, email, role } = el.dataset; fillForm(id,username,email,role);
+  }
+  function fillForm(id, username, email, role){
+    const idEl = document.getElementById('userIdHidden');
+    if (idEl) {
+      if (id) { idEl.setAttribute('name','id'); idEl.value = id; }
+      else { idEl.removeAttribute('name'); idEl.value = ''; }
+    }
+    document.querySelector('[name="username"]').value = username || '';
+    document.querySelector('[name="email"]').value = email || '';
+    const roleSelect = document.querySelector('[name="role"]');
+    if (roleSelect) roleSelect.value = role && roleSelect.querySelector(`option[value="${role}"]`) ? role : 'Customer';
+    const pwd = document.querySelector('[name="password"]'); if (pwd) pwd.value = '';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  function resetForm(){
+    fillForm('', '', '', 'Customer');
+    const idEl = document.getElementById('userIdHidden');
+    if (idEl) { idEl.removeAttribute('name'); idEl.value = ''; }
+  }
+
+  // helpers
+  function $(s,root=document){return root.querySelector(s)}
+  function $all(s,root=document){return Array.from(root.querySelectorAll(s))}
+  function text(el){return (el && (el.textContent||'').trim())||''}
+
+  // Search + Role filter
+  const searchBox = $('#searchBox');
+  const roleFilter = $('#roleFilter');
+  const resetBtn = $('#resetBtn');
+  const csvBtn = $('#csvBtn');
+
+  function applyFilters(){
+    const q = (searchBox?.value||'').toLowerCase();
+    const role = (roleFilter?.value||'');
+    const rows = $all('tbody tr');
+    let visible = 0;
+    rows.forEach(r => {
+      const user = r.children[1].innerText.toLowerCase();
+      const email = r.children[2].innerText.toLowerCase();
+      const rowRole = r.getAttribute('data-role') || '';
+      const matchText = !q || user.includes(q) || email.includes(q);
+      const matchRole = !role || rowRole === role;
+      const show = matchText && matchRole;
+      r.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    updateCount(visible);
+  }
+
+  if (searchBox) searchBox.addEventListener('input', applyFilters);
+  if (roleFilter) roleFilter.addEventListener('change', applyFilters);
+  if (resetBtn) resetBtn.addEventListener('click', resetForm);
+
+  function updateCount(n){
+    const counter = $('#userCount');
+    if (!counter) return;
+    if (typeof n === 'undefined') n = $all('tbody tr:not([style*="display: none"])').length;
+    counter.textContent = `Showing ${n} user(s)`;
+  }
+
+  // Sorting: reuse original logic
+  function sortTable(colIdx){
+    const tbody = document.querySelector('tbody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    const asc = tbody.getAttribute('data-sort') !== `${colIdx}:asc`;
+    rows.sort((a,b)=>{
+      const A = a.children[colIdx].innerText.toLowerCase();
+      const B = b.children[colIdx].innerText.toLowerCase();
+      if (A < B) return asc ? -1 : 1;
+      if (A > B) return asc ? 1 : -1;
+      return 0;
+    });
+    tbody.innerHTML=''; rows.forEach(r=>tbody.appendChild(r));
+    tbody.setAttribute('data-sort', `${colIdx}:${asc ? 'asc':'desc'}`);
+    applyFilters();
+  }
+
+  // CSV export of visible rows
+  function csvEscape(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }
+  function exportCSV(){
+    const rows = $all('#userTable tbody tr').filter(r => r.style.display !== 'none');
+    const headers = ['ID','Username','Email','Role'];
+    const data = rows.map(r => [0,1,2,3].map(i => text(r.children[i])));
+    const lines = [headers.join(',')].concat(data.map(r => r.map(csvEscape).join(',')));
+    const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+    const ts = new Date();
+    const fname = `users-${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}-${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}.csv`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  }
+  if (csvBtn) csvBtn.addEventListener('click', exportCSV);
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', ()=>{ updateCount(); applyFilters(); });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuickMart — Supermarket, Reimagined</title>
+    <meta name="theme-color" content="#ffffff" />
+    <style>
+        :root{
+            --bg: #ffffff;
+            --surface:#f6f7f9;
+            --ink:#111111;
+            --muted:#5f6368;
+            --accent:#06c167;
+            --accent2:#0077ff;
+            --accent3:#ff9800;
+            --surface-alt:#fdf9f3;
+            --danger:#d32f2f;
+            --wire:#e5e7eb;
+            --card:#ffffff;
+            --shadow:0 8px 24px rgba(0,0,0,.08);
+            --radius:14px;
+            --radius-sm:10px;
+            --radius-lg:22px;
+            --ring:0 0 0 1px #e5e7eb inset;
+       }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{
+            margin:0;background:var(--bg);color:var(--ink);
+            font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;
+            -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+        }
+        a{color:inherit;text-decoration:none}
+
+        /* Top chrome */
+        .chrome{
+            position:sticky;top:0;z-index:50;backdrop-filter:saturate(150%) blur(12px);
+            background:linear-gradient(90deg, rgb(255, 148, 72), rgb(255, 107, 0));
+            border-bottom:1px solid var(--wire)
+        }
+        .bar{max-width:1200px;margin:0 auto;padding:14px 18px;display:grid;grid-template-columns:180px 1fr auto;gap:16px;align-items:center}
+        .brand{font-weight:700;letter-spacing:.4px;font-size:20px;display:flex;gap:10px;align-items:center}
+        .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(6,193,103,.12)}
+        .search{display:flex;gap:10px;align-items:center;justify-self:center;width:100%;max-width:560px}
+        .field{flex:1;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--wire);box-shadow:var(--ring)}
+        .field input{flex:1;background:transparent;border:0;outline:0;color:var(--ink);font-size:15px}
+        .pill{border:1px solid var(--wire);padding:8px 14px;border-radius:999px;background:var(--surface);color:var(--ink);cursor:pointer;transition:.2s ease}
+        .pill:hover,
+        .chip:hover{
+            background:var(--surface-alt);
+            border-color:var(--accent2);
+            color:var(--accent2);
+        }
+        .pill:hover{transform:translateY(-1px)}
+        .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--wire);background:var(--surface);padding:8px 14px;border-radius:999px;cursor:pointer;transition:.2s ease}
+        .counts{display:inline-flex;gap:8px}
+        .count{min-width:18px;height:18px;padding:0 6px;border-radius:9px;background:var(--accent);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700}
+
+        /* Hero */
+        .hero{max-width:1200px;margin:28px auto 0;padding:28px 18px 10px}
+        .hero h1{font-size:clamp(28px,4vw,44px);line-height:1.1;letter-spacing:-.02em;margin:0;color:var(--accent);}
+        .hero p{color:var(--accent3);margin:8px 0 0}
+
+        /* Categories */
+        .categories{max-width:1200px;margin:10px auto 0;padding:0 18px;display:flex;gap:10px;overflow:auto}
+        .cat{white-space:nowrap}
+
+        /* Grid */
+        .wrap{max-width:1200px;margin:18px auto 60px;padding:0 18px}
+        .toprow{display:flex;justify-content:space-between;align-items:center;margin:6px 0 16px}
+        .h2{font-size:16px;text-transform:uppercase;letter-spacing:.2em;color:var(--muted)}
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+        .product{ display: grid; gap: 6px; }
+        .name-below{ margin: 0 12px 0 12px; }
+        .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);display:grid;grid-template-rows:160px auto;transition:transform .2s ease,box-shadow .2s ease, border-color .2s;}
+        .card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.15);border-color:var(--accent2);}
+        .thumb{width:100%;height:100%;object-fit:cover;background:#f0f2f5}
+        .stock-chip{ display:inline-block; padding:4px 8px; border-radius:8px; background:#e8f5e9; border:1px solid #c8e6c9; color: var(--ink);}
+        .stock-chip.out{ background:#ffebee; border-color:#ffcdd2; color:var(--danger);}
+        .pad{padding:12px;display:grid;gap:8px}
+        .name{font-weight:600;letter-spacing:-.01em}
+        .name-bottom{ margin-top: 6px; }
+        .name-pill{ display:inline-block; padding:4px 8px; border-radius:8px; background:#f2f4f8; border:1px solid var(--wire); font-size:14px; line-height:1; color: var(--ink);}
+        .price-chip{ display:inline-block; padding:4px 8px; border-radius:8px; background:#f2f4f8; border:1px solid var(--wire); font-size:13px; line-height:1; color: var(--ink);}
+        .price{color: inherit}
+        .row{display:flex;align-items:center;gap:8px}
+        .stock-row{ margin-top: 2px; }
+
+        .btn{border:1px solid var(--wire);background:var(--surface);color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s ease}
+        .btn:hover{transform:translateY(-1px)}
+        .btn.primary{
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            border-color: var(--accent);
+        }
+        .btn.primary:hover{
+            background: #04a85a; /* slightly darker green */
+            border-color: #04a85a;
+        }
+        .btn.ghost{background:transparent}
+        .btn.small{padding:6px 10px}
+
+        /* Drawer */
+        .drawer{position:fixed;inset:0;z-index:100;display:none}
+        .drawer[aria-hidden="false"]{display:block}
+        .backdrop{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+        .panel{position:absolute;top:0;right:0;height:100%;width:min(520px,100%);background:rgba(255,255,255,.92);border-left:1px solid var(--wire);backdrop-filter:saturate(160%) blur(16px);box-shadow:-20px 0 60px rgba(0,0,0,.6);display:flex;flex-direction:column}
+        .panel header{padding:18px;border-bottom:1px solid var(--wire);display:flex;align-items:center;justify-content:space-between}
+        .panel .content{padding:18px;overflow:auto;flex:1}
+        .panel footer{border-top:1px solid var(--wire);padding:18px}
+
+        table{width:100%;border-collapse:collapse}
+        th,td{padding:10px;border-bottom:1px solid var(--wire)}
+
+        .qty{display:flex;align-items:center;gap:8px}
+        .qty-display{display:inline-block;min-width:28px;text-align:center;font-variant-numeric:tabular-nums}
+
+        .sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,1px,1px);white-space:nowrap;border:0}
+
+        /* Small Carousel */
+        .carousel{max-width:1200px;margin:8px auto 0;padding:0 18px}
+        .carousel .frame{position:relative;border-radius:var(--radius);overflow:hidden;border:1px solid var(--wire);box-shadow:var(--shadow);background:var(--card)}
+        .carousel .track{display:flex;transition:transform .4s ease}
+        .carousel .slide{min-width:100%;height:clamp(220px,28vw,420px);position:relative}
+        .carousel .slide img{width:100%;height:100%;object-fit:cover;object-position:center}
+        .carousel .slide .cap{position:absolute;left:12px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;padding:8px 10px;border-radius:10px;font-size:14px}
+        .carousel .slide .cap strong.cap-title{display:block;font-size:16px;line-height:1.2;margin:0 0 2px}
+        .carousel .slide .cap .cap-desc{font-size:13px;opacity:.95}
+        .carousel .nav{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;pointer-events:none}
+        .carousel button.icon{pointer-events:auto;border:1px solid var(--wire);background:rgba(255,255,255,.9);backdrop-filter:saturate(160%) blur(6px);width:34px;height:34px;border-radius:999px;display:grid;place-items:center;cursor:pointer;margin:0 8px}
+        .carousel button.icon:hover{transform:translateY(-1px)}
+        .carousel .dots{display:flex;gap:6px;justify-content:center;padding:8px}
+        .carousel .dot{width:8px;height:8px;border-radius:999px;border:1px solid var(--wire);background:var(--surface)}
+        .carousel .dot[aria-current="true"]{background:var(--accent);border-color:var(--accent)}
+        @media (prefers-reduced-motion:reduce){
+            .card:hover{transform:none;box-shadow:var(--shadow)}
+        }
+    </style>
+    <script>
+        // Utility
+        function $(id){ return document.getElementById(id); }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const year=$('year'); if(year) year.textContent=new Date().getFullYear();
+            const q=$('q'); if(q){ q.addEventListener('input', doSearch); q.setAttribute('autofocus','autofocus'); }
+            document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeDrawer(); });
+        });
+
+        // Live region
+        function announce(msg){
+            let el=$('live');
+            if(!el){ el=document.createElement('div'); el.id='live'; el.className='sr-only'; el.setAttribute('aria-live','polite'); el.setAttribute('aria-atomic','true'); document.body.appendChild(el); }
+            el.textContent=msg; clearTimeout(el._t); el._t=setTimeout(()=>{ el.textContent=''; }, 1800);
+        }
+
+        // Drawer open/close
+        function openCart(){
+            $('drawerTitle').innerText='Your Cart';
+            const a=$('drawerAction'); if(a){ a.innerText='Checkout'; a.setAttribute('href','/customer/checkout'); }
+            loadCart(); $('drawer').setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+            const p=document.querySelector('#drawer .panel'); if(p) p.focus(); enableFocusTrap();
+        }
+        function openWishlist(){
+            $('drawerTitle').innerText='Your Wishlist';
+            const a=$('drawerAction'); if(a){ a.innerText='View Wishlist'; a.setAttribute('href','/customer/wishlist'); }
+            loadWishlist(); $('drawer').setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
+            const p=document.querySelector('#drawer .panel'); if(p) p.focus(); enableFocusTrap();
+        }
+        function closeDrawer(){ $('drawer').setAttribute('aria-hidden','true'); document.body.style.overflow=''; disableFocusTrap(); }
+
+        // Focus trap
+        let _trap=null;
+        function enableFocusTrap(){
+            if(_trap) return;
+            _trap=(e)=>{ if(e.key!=='Tab') return;
+                const panel=document.querySelector('#drawer .panel'); if(!panel||$('drawer').getAttribute('aria-hidden')==='true') return;
+                const f=panel.querySelectorAll('a,button,input,select,textarea,[tabindex]:not([tabindex="-1"])');
+                if(!f.length) return; const first=f[0], last=f[f.length-1];
+                if(e.shiftKey && document.activeElement===first){ e.preventDefault(); last.focus(); }
+                else if(!e.shiftKey && document.activeElement===last){ e.preventDefault(); first.focus(); }
+            };
+            document.addEventListener('keydown', _trap);
+        }
+        function disableFocusTrap(){ if(_trap){ document.removeEventListener('keydown', _trap); _trap=null; } }
+
+        // Currency
+        function formatCurrency(n){ const num=Number(n)||0; return 'Rs ' + num.toLocaleString('en-IN',{maximumFractionDigits:2}); }
+
+        // Counts
+        function setCounts(c){ if(!c) return; if(c.cartCount!=null&&$('cartCount')) $('cartCount').textContent=c.cartCount; if(c.wishCount!=null&&$('wishCount')) $('wishCount').textContent=c.wishCount; }
+
+        // Search
+        let _searchTimer=null;
+        function doSearch(){
+            if(_searchTimer) clearTimeout(_searchTimer);
+            _searchTimer=setTimeout(()=>{
+                const query = (""+$('q').value).toLowerCase();
+                const products = document.querySelectorAll('.grid .product');
+                products.forEach(item => {
+                    const nameEl = item.querySelector('h3');
+                    const name = nameEl ? nameEl.textContent.toLowerCase() : '';
+                    item.style.display = name.includes(query) ? 'grid' : 'none';
+                });
+            },120);
+        }
+
+        // Filters
+        function resetList(){
+            const products = document.querySelectorAll('.grid .product');
+            products.forEach(item => (item.style.display = 'grid'));
+            $('sectionTitle').innerText='All Products'; announce('All items');
+        }
+        function filterCategory(cat){
+            const products = document.querySelectorAll('.grid .product');
+            if(cat==='All'){ resetList(); return; }
+            products.forEach(item => {
+                const category = item.getAttribute('data-category');
+                item.style.display = category === cat ? 'grid' : 'none';
+            });
+            $('sectionTitle').innerText=cat; announce('Category '+cat);
+        }
+        function filterSale(){
+            const btn=$('btnSale'); const active=btn && btn.getAttribute('aria-pressed')==='true';
+            const products = document.querySelectorAll('.grid .product');
+            if(!active){
+                products.forEach(item => {
+                    const raw = parseFloat(item.dataset.price || '0');
+                    item.style.display = raw < 100 ? 'grid' : 'none';
+                });
+                if(btn){ btn.setAttribute('aria-pressed','true'); btn.textContent='On Sale (showing)'; }
+                announce('Showing sale items');
+            } else {
+                products.forEach(item => item.style.display='grid');
+                if(btn){ btn.setAttribute('aria-pressed','false'); btn.textContent='On Sale'; }
+                announce('Showing all items');
+            }
+        }
+
+        // Loaders
+        async function loadCart(){
+            const p=document.querySelector('#drawer .panel'); const c=$('drawerContent');
+            if(p) p.setAttribute('aria-busy','true'); if(c) c.innerHTML='<p>Loading…</p>';
+            try{
+                const res=await fetch('/customer/cart/json'); if(!res.ok) throw new Error('no-json');
+                const data=await res.json(); renderDrawer(data.items||[], true); setCounts(data.counts);
+            }catch(e){
+                if(window.__CART__){ renderDrawer(window.__CART__.items||[], true); setCounts(window.__CART__.counts); }
+                else { renderDrawer([], true); }
+            } finally { if(p) p.setAttribute('aria-busy','false'); }
+        }
+        async function loadWishlist(){
+            const p=document.querySelector('#drawer .panel'); const c=$('drawerContent');
+            if(p) p.setAttribute('aria-busy','true'); if(c) c.innerHTML='<p>Loading…</p>';
+            try{
+                const res=await fetch('/customer/wishlist/json'); if(!res.ok) throw new Error('no-json');
+                const data=await res.json(); renderDrawer(data.items||[], false); setCounts(data.counts);
+            }catch(e){
+                if(window.__WISHLIST__){ renderDrawer(window.__WISHLIST__.items||[], false); setCounts(window.__WISHLIST__.counts); }
+                else { renderDrawer([], false); }
+            } finally { if(p) p.setAttribute('aria-busy','false'); }
+        }
+
+        // Drawer renderer
+        function renderDrawer(items, isCart){
+            const c=$('drawerContent'), t=$('drawerTotal'); if(!c||!t) return;
+            if(!items || !items.length){ c.innerHTML='<p style="margin:0">'+(isCart?'Your cart is empty.':'Your wishlist is empty.')+'</p>'; t.textContent='Rs 0'; announce((isCart?'Cart total ':'Wishlist total ')+t.textContent); return; }
+
+            let total=0;
+            const rows=items.map(it=>{
+                const price=Number(it.price || (it.product && it.product.price) || 0);
+                const qty=Number(it.quantity || 1);
+                const name=it.name || (it.product && it.product.name) || 'Product';
+                const id=it.cartItemId || it.id;
+                const pid=it.productId || (it.product && it.product.id);
+                const line=price*qty; total+=isNaN(line)?0:line;
+
+                const qtyCell = isCart
+                    ? `<td class="qty-cell"><div class="qty"><button class="btn small" aria-label="Decrease quantity" onclick="changeQty(${id},-1)">−</button><span id="qty-${id}" class="qty-display" aria-live="polite">${qty}</span><button class="btn small" aria-label="Increase quantity" onclick="changeQty(${id},1)">+</button></div></td>`
+                    : `<td class="qty-cell"><div class="qty"><button class="btn small" aria-label="Decrease quantity" onclick="changeWQty(${id},-1)">−</button><span id="wqty-${id}" class="qty-display" aria-live="polite">1</span><button class="btn small" aria-label="Increase quantity" onclick="changeWQty(${id},1)">+</button></div></td>`;
+
+                const actionsCell = isCart
+                    ? `<td style="text-align:right"></td>`
+                    : `<td style="text-align:right"><button class="btn" onclick="moveWishlistToCartWithQty(${pid},${it.id})">Add to Cart</button><button class="btn ghost" onclick="removeWishlist(${it.id})">✕</button></td>`;
+
+                return `<tr><td>${name}</td><td>${formatCurrency(price)}</td>${qtyCell}<td>${formatCurrency(line)}</td>${actionsCell}</tr>`;
+            }).join('');
+
+            c.innerHTML = `<table><thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+            t.textContent = formatCurrency(total);
+            announce((isCart?'Cart total ':'Wishlist total ')+t.textContent);
+        }
+
+        // Qty logic (buttons only). Cart: zero removes.
+        function clampQty(v){ const n=parseInt(v,10); return isNaN(n)||n<1?1:n; }
+        function clampQtyZero(v){ const n=parseInt(v,10); return isNaN(n)||n<0?0:n; }
+        let _qtyTimers={};
+        function changeQty(id, delta){
+            const el=$('qty-'+id); if(!el) return;
+            const current=parseInt(el.textContent,10)||0;
+            const next=clampQtyZero(current+delta);
+            el.textContent=next; queueQty(id,next);
+        }
+        function queueQty(id, qty){
+            qty=clampQtyZero(qty);
+            if(_qtyTimers[id]) clearTimeout(_qtyTimers[id]);
+            announce('Updating quantity…');
+            _qtyTimers[id]=setTimeout(()=>saveQty(id,qty), 200);
+        }
+        async function saveQty(id, qty){
+            if(qty<=0){
+                try{ const res=await fetch(`/customer/cart/remove/${id}`,{method:'DELETE'}); if(!res.ok) throw new Error('remove-failed'); announce('Item removed'); loadCart(); return; }
+                catch(e){ console.error(e); announce('Could not remove item'); return; }
+            }
+            try{
+                const body=new URLSearchParams(); body.append('cartItemId',id); body.append('quantity',qty);
+                const res=await fetch('/customer/cart/update',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
+                if(!res.ok) throw new Error('update-failed'); announce('Quantity updated'); loadCart();
+            }catch(e){ console.error(e); announce('Could not update quantity'); }
+        }
+        function changeWQty(wishlistId, delta){
+            const el=$('wqty-'+wishlistId); if(!el) return;
+            const current=parseInt(el.textContent,10)||1;
+            const next=clampQty(current+delta);
+            el.textContent=next;
+        }
+        async function moveWishlistToCartWithQty(productId, wishlistId){
+            const el=$('wqty-'+wishlistId); const qty=clampQty(el?el.textContent:1);
+            try{
+                const res=await fetch(`/customer/cart/add?productId=${productId}&quantity=${qty}`,{method:'POST'});
+                if(res.ok){ await removeWishlist(wishlistId); _reloadAfter(); }
+            }catch(e){ console.error('Failed to move to cart', e); }
+        }
+
+        // Wishlist remove + drawer reload
+        async function removeWishlist(id){ const res=await fetch(`/customer/wishlist/remove/${id}`,{method:'DELETE'}); if(res.ok) _reloadAfter(); }
+        const _reloadAfter=()=>{ const t=$('drawerTitle').innerText||''; if(t.includes('Cart')) loadCart(); else loadWishlist(); };
+
+        // Small Carousel logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const el = document.getElementById('promoCarousel');
+            if(!el) return;
+            initCarousel(el);
+        });
+
+        function initCarousel(root){
+            const track = root.querySelector('.track');
+            const slides = Array.from(root.querySelectorAll('.slide'));
+            const prev = root.querySelector('[data-prev]');
+            const next = root.querySelector('[data-next]');
+            const dotsWrap = root.querySelector('.dots');
+            let index = 0, timer = null;
+
+            // build dots
+            slides.forEach((_,i)=>{
+                const b=document.createElement('button');
+                b.className='dot'; b.type='button'; b.setAttribute('aria-label','Go to slide '+(i+1));
+                if(i===0) b.setAttribute('aria-current','true');
+                b.addEventListener('click',()=>go(i));
+                dotsWrap.appendChild(b);
+            });
+
+            function go(i){
+                index=(i+slides.length)%slides.length;
+                track.style.transform=`translateX(${-index*100}%)`;
+                const dots=dotsWrap.querySelectorAll('.dot');
+                dots.forEach((d,j)=>d.setAttribute('aria-current', j===index ? 'true':'false'));
+            }
+            function step(d){ go(index+d); }
+
+            // controls
+            if(prev) prev.addEventListener('click',()=>step(-1));
+            if(next) next.addEventListener('click',()=>step(1));
+
+            // autoplay
+            function play(){ stop(); timer=setInterval(()=>step(1), 4000); }
+            function stop(){ if(timer) clearInterval(timer); timer=null; }
+            root.addEventListener('mouseenter', stop);
+            root.addEventListener('mouseleave', play);
+            root.addEventListener('focusin', stop);
+            root.addEventListener('focusout', play);
+            play();
+
+            // keyboard support
+            root.addEventListener('keydown', (e)=>{
+                if(e.key==='ArrowLeft'){ e.preventDefault(); step(-1); }
+                if(e.key==='ArrowRight'){ e.preventDefault(); step(1); }
+            });
+        }
+    </script>
+</head>
+<body>
+<!-- Live region -->
+<div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+<!-- Top chrome -->
+<nav class="chrome" role="navigation">
+    <div class="bar">
+        <div class="brand"><span class="dot"></span> QuickMart</div>
+        <div class="search" role="search" aria-label="Search products">
+            <div class="field">
+                <svg width="16" height="16" fill="currentColor" aria-hidden="true" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.867-3.834zM12 6.5a5.5 5.5 0 1 1-11 0a5.5 5.5 0 0 1 11 0"/></svg>
+                <input id="q" type="search" placeholder="Search fresh, fast." aria-label="Search" />
+            </div>
+        </div>
+        <div class="counts">
+            <div class="chip" onclick="openWishlist()" aria-label="Open wishlist" role="button" aria-controls="drawer">❤️ <span id="wishCount" class="count" th:text="${wishlistCount}">0</span></div>
+            <div class="chip" onclick="openCart()" aria-label="Open cart" role="button" aria-controls="drawer">🛒 <span id="cartCount" class="count" th:text="${cartCount}">0</span></div>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+    <h1>Groceries, perfected.</h1>
+    <p>Less friction. More flavor. Delivered with intention.</p>
+</header>
+
+    <!-- Small promo carousel -->
+    <section class="carousel" aria-label="Featured items">
+      <div id="promoCarousel" class="frame" role="region" aria-roledescription="carousel" tabindex="0">
+        <div class="track" th:if="${promotions != null and #lists.size(promotions) > 0}">
+          <div class="slide" th:each="pr : ${promotions}">
+            <img th:if="${pr.imageUrl != null}" th:src="${pr.imageUrl}" th:attr="alt=${pr.title}" alt="Promotion" />
+            <div class="cap">
+              <strong class="cap-title" th:text="${#strings.isEmpty(pr.title) ? 'Title Under Construction' : pr.title}">Title Under Construction</strong>
+              <div class="cap-desc" th:text="${#strings.isEmpty(pr.description) ? 'Await for Promotional materials' : pr.description}">Await for Promotional materials</div>
+            </div>
+          </div>
+        </div>
+        <div class="nav" aria-hidden="true">
+          <button class="icon" type="button" data-prev aria-label="Previous slide">&#x2039;</button>
+          <button class="icon" type="button" data-next aria-label="Next slide">&#x203A;</button>
+        </div>
+        <div class="dots" role="tablist" aria-label="Slide navigation"></div>
+      </div>
+    </section>
+
+
+
+<!-- Categories -->
+<section class="categories" aria-label="Product categories">
+    <button class="pill cat" onclick="filterCategory('All')">All</button>
+    <button class="pill cat" id="btnSale" onclick="filterSale()" aria-pressed="false">On Sale</button>
+    <div th:each="cat : ${categories}" class="cat">
+        <button class="pill" th:text="${cat}" th:attr="data-cat=${cat}" onclick="filterCategory(this.dataset.cat)"></button>
+    </div>
+</section>
+
+<!-- Grid -->
+<main class="wrap">
+    <div class="toprow">
+        <div class="h2" id="sectionTitle">All Products</div>
+        <button class="btn ghost" onclick="resetList()">Reset</button>
+    </div>
+
+    <div id="grid" class="grid">
+        <div th:each="p : ${products}" class="product" th:attr="data-category=${p.category},data-price=${p.price}">
+          <div class="card">
+            <img class="thumb" th:src="${p.imageUrl}" th:attr="alt=${p.name}" alt="Product image" />
+            <div class="pad">
+                  <div class="row" style="justify-content: space-between; align-items: baseline;">
+                <div class="price"><span class="price-chip" th:text="'Rs ' + ${p.price}">Rs 0</span></div>
+                <div class="row">
+                  <form th:action="@{/customer/wishlist/add}" method="post">
+                    <input type="hidden" name="productId" th:value="${p.id}" />
+                    <button type="submit" class="btn small">♡</button>
+                  </form>
+                  <form th:action="@{/customer/cart/add}" method="post">
+                    <input type="hidden" name="productId" th:value="${p.id}" />
+                    <button type="submit" class="btn primary small" th:disabled="${p.quantity <= 0}">Add</button>
+                  </form>
+                </div>
+              </div>
+              <div class="row stock-row" style="justify-content: space-between; font-size: 13px;">
+                <span th:if="${p.quantity > 0}" class="stock-chip" th:text="'Stock: ' + ${p.quantity}"></span>
+                <span th:if="${p.quantity <= 0}" class="stock-chip out">Out of Stock</span>
+              </div>
+            </div>
+          </div>
+          <h3 class="name name-below"><span class="name-pill" th:text="${p.name}">Product</span></h3>
+        </div>
+    </div>
+</main>
+
+<!-- Drawer -->
+<div id="drawer" class="drawer" aria-hidden="true">
+    <div class="backdrop" onclick="closeDrawer()"></div>
+    <aside class="panel" role="dialog" aria-modal="true" aria-labelledby="drawerTitle" tabindex="-1">
+        <header>
+            <h3 id="drawerTitle">Your Cart</h3>
+            <button class="btn" onclick="closeDrawer()" aria-label="Close">✕</button>
+        </header>
+        <div id="drawerContent" class="content">
+            <p>Your cart is empty.</p>
+        </div>
+        <footer>
+            <div class="row" style="justify-content: space-between; align-items: center;">
+                <div><strong>Total:</strong> <span id="drawerTotal">Rs 0</span></div>
+                <a id="drawerAction" class="btn primary" href="/customer/checkout">Checkout</a>
+            </div>
+        </footer>
+    </aside>
+</div>
+
+<footer class="wrap" style="opacity:.7;border-top:1px solid var(--wire);padding-top:18px;">
+    © <span id="year"></span> QuickMart
+</footer>
+</body>
+</html>
