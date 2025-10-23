@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>QuickMart Admin Dashboard</title>
+    <style>
+        body {font-family: Arial, sans-serif; background: #f7f7f7; margin: 0; padding: 20px;}
+        h1 {text-align: center; color: #333;}
+        .container {max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);}
+        form {display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;}
+        input[type=text], input[type=email], input[type=password] {
+            flex: 1 1 30%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;
+        }
+        select {
+            flex: 1 1 30%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {background: #007BFF; color: white; border: none; padding: 8px 15px;
+            border-radius: 4px; cursor: pointer;}
+        button:hover {background: #0056b3;}
+        table {width: 100%; border-collapse: collapse; margin-top: 10px;}
+        th, td {padding: 10px; border: 1px solid #ddd; text-align: center;}
+        th {background: #007BFF; color: white;}
+        a {text-decoration: none; color: #007BFF;}
+        a.delete {color: red;}
+        .actions {display: flex; gap: 8px; justify-content: center;}
+        .topbar {display: flex; justify-content: space-between; align-items: center;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="topbar">
+        <h1>QuickMart - Admin Dashboard</h1>
+        <a href="/admin/report"><button>📄 Download Report</button></a>
+        <p th:text="'User: ' + ${session.loggedInUser.username}"></p>
+    </div>
+    <div class="toolbar" style="display:flex; gap:10px; align-items:center; margin:10px 0;">
+        <input id="searchBox" type="text" placeholder="Search by username or email" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
+        <button type="button" onclick="resetForm()">New</button>
+    </div>
+
+    <h3>Add / Update User</h3>
+    <form th:action="@{/admin/save}" method="post" th:object="${newUser}">
+        <input type="hidden" th:field="*{id}">
+        <input type="text" th:field="*{username}" placeholder="Username" required>
+        <input type="email" th:field="*{email}" placeholder="Email" required>
+        <input type="password" th:field="*{password}" placeholder="Password (leave blank to keep unchanged)">
+        <select th:field="*{role}">
+            <option value="Customer">Customer</option>
+            <option value="Administrator">Administrator</option>
+            <option value="Payment_Manager">Payment Manager</option>
+            <option value="Marketing_Manager">Marketing Manager</option>
+            <option value="Inventory_Manager">Inventory Manager</option>
+            <option value="Delivery_Coordinator">Delivery Coordinator</option>
+        </select>
+        <button type="submit">Save</button>
+    </form>
+
+    <h3>User List</h3>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th style="cursor:pointer" onclick="sortTable(1)">Username ▲▼</th>
+            <th style="cursor:pointer" onclick="sortTable(2)">Email ▲▼</th>
+            <th style="cursor:pointer" onclick="sortTable(3)">Role ▲▼</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.role}"></td>
+            <td class="actions">
+                <a href="#" th:attr="data-id=${user.id},data-username=${user.username},data-email=${user.email},data-role=${user.role}" onclick="fillFromRow(this)">✏️ Edit</a>
+                <a th:href="@{'/admin/delete/' + ${user.id}}" class="delete" onclick="return confirm('Delete this user?')">🗑 Delete</a>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function fillFromRow(el) {
+        const { id, username, email, role } = el.dataset;
+        fillForm(id, username, email, role);
+    }
+
+    function fillForm(id, username, email, role) {
+        document.querySelector('[name="id"]').value = id || '';
+        document.querySelector('[name="username"]').value = username || '';
+        document.querySelector('[name="email"]').value = email || '';
+        const roleSelect = document.querySelector('[name="role"]');
+        if (roleSelect) {
+            roleSelect.value = role && roleSelect.querySelector(`option[value="${role}"]`) ? role : 'Customer';
+        }
+        const pwd = document.querySelector('[name="password"]');
+        if (pwd) pwd.value = '';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function resetForm() {
+        fillForm('', '', '', 'Customer');
+    }
+
+    // Search / filter rows by username or email
+    const searchBox = document.getElementById('searchBox');
+    if (searchBox) {
+        searchBox.addEventListener('input', function() {
+            const q = this.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            let visible = 0;
+            rows.forEach(r => {
+                const user = r.children[1].innerText.toLowerCase();
+                const email = r.children[2].innerText.toLowerCase();
+                const match = user.includes(q) || email.includes(q);
+                r.style.display = match ? '' : 'none';
+                if (match) visible++;
+            });
+            updateCount(visible);
+        });
+    }
+
+    function updateCount(n) {
+        let counter = document.getElementById('userCount');
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.id = 'userCount';
+            counter.style.margin = '8px 0';
+            document.querySelector('.container').insertBefore(counter, document.querySelector('table'));
+        }
+        if (typeof n === 'undefined') {
+            n = document.querySelectorAll('tbody tr:not([style*="display: none"])').length;
+        }
+        counter.textContent = `Showing ${n} user(s)`;
+    }
+
+    // Basic client-side sort (by column index)
+    function sortTable(colIdx) {
+        const tbody = document.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const asc = tbody.getAttribute('data-sort') !== `${colIdx}:asc`;
+        rows.sort((a, b) => {
+            const A = a.children[colIdx].innerText.toLowerCase();
+            const B = b.children[colIdx].innerText.toLowerCase();
+            if (A < B) return asc ? -1 : 1;
+            if (A > B) return asc ? 1 : -1;
+            return 0;
+        });
+        tbody.innerHTML = '';
+        rows.forEach(r => tbody.appendChild(r));
+        tbody.setAttribute('data-sort', `${colIdx}:${asc ? 'asc' : 'desc'}`);
+        updateCount();
+    }
+
+    // Initialize count on load
+    document.addEventListener('DOMContentLoaded', () => updateCount());
+</script>
+
+</body>
+</html>

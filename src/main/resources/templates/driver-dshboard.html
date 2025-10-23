@@ -1,0 +1,20 @@
+<table>
+    <tr><th>Name</th><th>Phone</th><th>Vehicle</th><th>Status</th><th>Set Status</th></tr>
+    <tr th:each="d : ${drivers}">
+        <td th:text="${d.name}"></td>
+        <td th:text="${d.contactNumber}"></td>
+        <td th:text="${d.vehicleNumber}"></td>
+        <td th:text="${d.status}"></td>
+        <td>
+            <form th:action="@{/delivery/drivers/status}" method="post">
+                <input type="hidden" name="driverId" th:value="${d.id}">
+                <select name="status">
+                    <option>AVAILABLE</option>
+                    <option>ON_DELIVERY</option>
+                    <option>INACTIVE</option>
+                </select>
+                <button type="submit">Update</button>
+            </form>
+        </td>
+    </tr>
+</table>

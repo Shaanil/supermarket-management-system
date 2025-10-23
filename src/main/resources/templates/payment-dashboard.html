@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>QuickMart – Payment Manager Dashboard</title>
+    <meta name="theme-color" content="#ffffff" />
+    <style>
+        :root{
+            --bg:#ffffff; --surface:#f6f7f9; --ink:#111111; --muted:#5f6368;
+            --accent:#06c167; --accent2:#0077ff; --warn:#ff9800; --danger:#d32f2f;
+            --wire:#e5e7eb; --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08);
+            --radius:14px; --radius-sm:10px; --radius-lg:22px; --ring:0 0 0 1px var(--wire) inset;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%}
+        body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+        a{color:inherit;text-decoration:none}
+
+        /* Topbar */
+        header.top{position:sticky;top:0;z-index:10;background:linear-gradient(90deg, rgba(255,255,255,.9), rgba(250,250,255,.9));border-bottom:1px solid var(--wire);backdrop-filter:saturate(150%) blur(10px)}
+        .bar{max-width:1200px;margin:0 auto;padding:14px 18px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+        .title{font-weight:700;letter-spacing:.2px;font-size:18px}
+        .actions{display:flex;gap:8px}
+        .btn{border:1px solid var(--wire);background:var(--surface);color:var(--ink);padding:8px 12px;border-radius:10px;cursor:pointer;transition:.15s ease}
+        .btn:hover{transform:translateY(-1px)}
+        .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+        .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+        .btn.info{background:var(--accent2);border-color:var(--accent2);color:#fff}
+        .btn.gray{background:#e9ecef;border-color:#e9ecef;color:#222}
+
+        /* Layout */
+        .wrap{max-width:1200px;margin:20px auto;padding:0 18px}
+
+        /* Summary cards */
+        .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+        .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px}
+        .card h3{margin:0 0 6px 0;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+        .metric{font-size:22px;font-weight:700}
+        .delta{font-size:12px;color:var(--muted)}
+
+        /* Filters */
+        .filters{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;margin:8px 0 16px}
+        .search{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:var(--surface);border:1px solid var(--wire)}
+        .search input{flex:1;background:transparent;border:0;outline:0}
+        .select{padding:8px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--wire)}
+
+        /* Tables */
+        .section{margin-bottom:28px}
+        .section h2{margin:0 0 8px 0}
+        .table-card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+        table{width:100%;border-collapse:collapse}
+        thead th{background:var(--surface);color:var(--muted);text-transform:uppercase;font-size:12px;letter-spacing:.12em;padding:10px;border-bottom:1px solid var(--wire);text-align:center}
+        tbody td{padding:10px;border-bottom:1px solid var(--wire);text-align:center}
+        tbody tr:nth-child(even){background:#fafbfc}
+        .money{font-variant-numeric:tabular-nums}
+
+        /* Status pills */
+        .pill{display:inline-block;padding:4px 8px;border-radius:999px;border:1px solid var(--wire);background:var(--surface);font-size:12px}
+        .pill.ok{background:#e8f5e9;border-color:#c8e6c9;color:#1b5e20}
+        .pill.warn{background:#fff8e1;border-color:#ffe0b2;color:#8d6e00}
+        .pill.danger{background:#ffebee;border-color:#ffcdd2;color:#b71c1c}
+        .pill.info{background:#e3f2fd;border-color:#bbdefb;color:#0d47a1}
+
+        /* Footer */
+        .footer{text-align:center;color:var(--muted);margin:24px 0 40px;font-size:13px}
+
+        /* Responsive */
+        @media(max-width:700px){
+            .filters{grid-template-columns:1fr;}
+            thead{display:none}
+            table,tbody,tr,td{display:block;width:100%}
+            tbody tr{border-bottom:1px solid var(--wire)}
+            tbody td{text-align:left;display:flex;justify-content:space-between;gap:12px}
+            tbody td::before{content:attr(data-th);font-weight:600;color:var(--muted)}
+        }
+    </style>
+    <script>
+        function $(s,root=document){return root.querySelector(s)}
+        function $all(s,root=document){return Array.from(root.querySelectorAll(s))}
+
+        function normStatus(s){
+            s = (s||'').toString().trim().toLowerCase();
+            return s; // statuses already match dropdown values (paid, pending, failed, refunded)
+        }
+        function normType(s){
+            s = (s||'').toString().trim().toLowerCase();
+            if(s.includes('cash_on_delivery') || s.includes('cash on delivery') || s === 'cod') return 'cod';
+            if(s.includes('cash')) return 'cash';
+            if(s.includes('card')) return 'card';
+            return s;
+        }
+
+        function todayStr(){
+            const d = new Date();
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth()+1).padStart(2,'0');
+            const dd = String(d.getDate()).padStart(2,'0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function recomputeMetrics(){
+            const rows = $all('tbody tr[data-row="order"]');
+            // consider only currently visible rows for dynamic dashboard behavior
+            const visible = rows.filter(tr => tr.style.display !== 'none');
+            let total = visible.length;
+            let totalSalesAmt = 0;
+            let pendingCount = 0;
+            let refundCount = 0;
+            visible.forEach(tr => {
+                const amt = parseFloat(tr.getAttribute('data-amount') || (text(tr.querySelector('[data-col="amount"]')) || '0').replace(/[^0-9.]/g,'')) || 0;
+                const pstat = normStatus((tr.getAttribute('data-pstatus') || text(tr.querySelector('[data-col="pstatus"]'))));
+                if(pstat === 'pending') pendingCount++;
+                if(pstat === 'refunded') refundCount++;
+                if(pstat === 'approved') totalSalesAmt += amt;
+            });
+            const fmtAmt = (n)=> 'Rs ' + (Number(n)||0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+            const setTxt = (id, val)=>{ const el=$(id); if(el) el.textContent = val; };
+            setTxt('#metricTotal', total);
+            setTxt('#metricTotalSales', fmtAmt(totalSalesAmt));
+            setTxt('#metricPending', pendingCount);
+            setTxt('#metricRefunds', refundCount);
+        }
+
+        function generateReport(){
+            const rows = $all('tbody tr[data-row="order"]').filter(tr => tr.style.display !== 'none');
+            const headers = ['Order ID','Customer','Amount','Payment Type','Payment Status','Delivery Status'];
+            const data = rows.map(tr => [
+                tr.querySelector('[data-col="id"]').textContent.trim(),
+                tr.querySelector('[data-col="user"]').textContent.trim(),
+                tr.querySelector('[data-col="amount"]').textContent.trim(),
+                tr.querySelector('[data-col="ptype"]').textContent.trim(),
+                tr.querySelector('[data-col="pstatus"]').textContent.trim(),
+                tr.querySelector('td[data-th="Delivery Status"]').textContent.trim()
+            ]);
+            // Summary (same as metrics on visible rows)
+            let totalSalesAmt = 0, pendingCount = 0, refundCount = 0;
+            rows.forEach(tr => {
+                const amt = parseFloat(tr.getAttribute('data-amount') || (text(tr.querySelector('[data-col="amount"]')) || '0').replace(/[^0-9.]/g,'')) || 0;
+                const pstat = normStatus((tr.getAttribute('data-pstatus') || text(tr.querySelector('[data-col="pstatus"]'))));
+                if(pstat === 'pending') pendingCount++;
+                if(pstat === 'refunded') refundCount++;
+                if(pstat === 'approved') totalSalesAmt += amt;
+            });
+            const fmtAmt = (n)=> 'Rs ' + (Number(n)||0).toLocaleString('en-IN', { maximumFractionDigits: 2 });
+            const summary = [
+                ['Report Date', new Date().toISOString()],
+                ['Visible Rows', String(rows.length)],
+                ['Total Sales (visible)', fmtAmt(totalSalesAmt)],
+                ['Pending Count (visible)', String(pendingCount)],
+                ['Refund Count (visible)', String(refundCount)]
+            ];
+            const csvRows = [];
+            summary.forEach(kv => csvRows.push(`# ${kv[0]},${kv[1]}`));
+            csvRows.push(headers.join(','));
+            data.forEach(r => csvRows.push(r.map(v => '"'+v.replace(/"/g,'""')+'"').join(',')));
+            const blob = new Blob([csvRows.join('\n')], {type:'text/csv;charset=utf-8;'});
+            const ts = new Date();
+            const fname = `payment-report-${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}-${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}.csv`;
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fname;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.addEventListener('DOMContentLoaded',()=>{
+            // search
+            const q=$('#q'); if(q){ q.addEventListener('input', filterRows); }
+            const statusSel=$('#status'); if(statusSel){ statusSel.addEventListener('change', filterRows); }
+            const paySel=$('#ptype'); if(paySel){ paySel.addEventListener('change', filterRows); }
+            recomputeMetrics();
+        });
+
+        function text(el){ return (el?.textContent||'').trim().toLowerCase(); }
+
+        function filterRows(){
+            const qVal=(($('#q')?.value)||'').trim().toLowerCase();
+            const statSel=normStatus(($('#status')?.value)||'');
+            const typeSel=normType(($('#ptype')?.value)||'');
+            $all('tbody tr[data-row="order"]').forEach(tr=>{
+                const t=[text(tr.querySelector('[data-col="id"]')),
+                         text(tr.querySelector('[data-col="user"]')),
+                         text(tr.querySelector('[data-col="amount"]'))].join(' ');
+                const s=normStatus(text(tr.querySelector('[data-col="pstatus"]')));
+                const pt=normType(text(tr.querySelector('[data-col="ptype"]')));
+                const match = (!qVal || t.includes(qVal))
+                           && (!statSel || s===statSel)
+                           && (!typeSel || pt===typeSel);
+                tr.style.display = match ? '' : 'none';
+            });
+            recomputeMetrics();
+        }
+
+        function confirmAction(url, msg){ if(confirm(msg)) { window.location.href=url; } }
+
+        function printReport(){ generateReport(); }
+    </script>
+</head>
+<body>
+<header class="top">
+    <div class="bar">
+        <div class="title">QuickMart · Payment Manager</div>
+        <div class="actions">
+            <button class="btn info" onclick="printReport()">Generate Report</button>
+            <a href="/logout" class="btn gray">Logout</a>
+        </div>
+    </div>
+</header>
+
+<main class="wrap">
+    <!-- Summary cards -->
+    <section class="cards" aria-label="Overview">
+        <div class="card">
+            <h3>Total Orders</h3>
+            <div id="metricTotal" class="metric" th:text="${orders.size()}">0</div>
+        </div>
+        <div class="card">
+            <h3>Total Sales</h3>
+            <div id="metricTotalSales" class="metric money" th:text="${totalSales}">Rs 0</div>
+            <div class="delta" th:if="${paidDelta!=null}" th:text="${paidDelta}"></div>
+        </div>
+        <div class="card">
+            <h3>Pending</h3>
+            <div id="metricPending" class="metric" th:text="${pendingCount}">0</div>
+        </div>
+        <div class="card">
+            <h3>Refunds</h3>
+            <div id="metricRefunds" class="metric" th:text="${refundCount}">0</div>
+        </div>
+    </section>
+
+    <!-- Filters -->
+    <section class="filters" aria-label="Filters">
+        <div class="search"><input id="q" type="search" placeholder="Search orders by id, customer, or amount…" aria-label="Search orders" /></div>
+        <select id="status" class="select" aria-label="Filter by payment status">
+            <option value="">All Statuses</option>
+            <option value="approved">approved</option>
+            <option value="paid">paid</option>
+            <option value="pending">pending</option>
+            <option value="failed">failed</option>
+            <option value="refunded">refunded</option>
+        </select>
+        <select id="ptype" class="select" aria-label="Filter by payment type">
+            <option value="">All Types</option>
+            <option value="card">card</option>
+            <option value="cash">cash</option>
+            <option value="cod">cod</option>
+        </select>
+    </section>
+
+    <!-- Orders -->
+    <section class="section">
+        <h2>🧾 Orders Overview</h2>
+        <div class="table-card">
+            <table role="table" aria-label="Orders">
+                <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Amount</th>
+                    <th>Payment Type</th>
+                    <th>Payment Status</th>
+                    <th>Delivery Status</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="order : ${orders}" data-row="order" th:attr="data-date=${#temporals.format(order.orderDate, 'yyyy-MM-dd')}, data-amount=${order.totalAmount}, data-pstatus=${order.paymentStatus}, data-ptype=${order.paymentType}">
+                    <td data-th="Order ID" data-col="id" th:text="${order.id}"></td>
+                    <td data-th="Customer" data-col="user" th:text="${order.user.username}"></td>
+                    <td data-th="Amount" data-col="amount" class="money" th:text="${order.totalAmount}"></td>
+                    <td data-th="Payment Type" data-col="ptype" th:text="${order.paymentType}"></td>
+                    <td data-th="Payment Status" data-col="pstatus">
+                        <span class="pill" th:classappend="${order.paymentStatus=='PAID' or order.paymentStatus=='APPROVED'} ? ' ok' : (${order.paymentStatus=='PENDING'} ? ' warn' : (${order.paymentStatus=='REFUNDED'} ? ' info' : ' danger'))" th:text="${order.paymentStatus}"></span>
+                    </td>
+                    <td data-th="Delivery Status">
+                        <span class="pill" th:text="${order.deliveryStatus}"></span>
+                    </td>
+                    <td data-th="Actions">
+                        <a th:href="@{'/payment/approve/' + ${order.id}}" class="btn primary" onclick="event.preventDefault(); confirmAction(this.href,'Approve this payment?')">Approve</a>
+                        <a th:href="@{'/payment/reject/' + ${order.id}}" class="btn danger" onclick="event.preventDefault(); confirmAction(this.href,'Refund this order?')">Refund</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(orders)}">
+                    <td colspan="7">No orders available.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Payment Methods -->
+    <section class="section">
+        <h2>💳 Saved Payment Methods</h2>
+        <div class="table-card">
+            <table role="table" aria-label="Saved Payment Methods">
+                <thead>
+                <tr>
+                    <th>Payment ID</th>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Card Holder</th>
+                    <th>Card Number</th>
+                    <th>Expiry</th>
+                    <th>Custom Message</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="pm : ${payments}">
+                    <td data-th="Payment ID" th:text="${pm.id}"></td>
+                    <td data-th="User" th:text="${pm.user.username}"></td>
+                    <td data-th="Type" th:text="${pm.type}"></td>
+                    <td data-th="Card Holder" th:text="${pm.cardHolderName}"></td>
+                    <td data-th="Card Number" th:text="${pm.cardNumber}"></td>
+                    <td data-th="Expiry" th:text="${pm.expiry}"></td>
+                    <td data-th="Custom Message" th:text="${pm.customMessage}"></td>
+                    <td data-th="Actions">
+                        <a th:href="@{'/payment/delete/' + ${pm.id}}" class="btn danger" onclick="event.preventDefault(); confirmAction(this.href,'Delete this saved payment method?')">Delete</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(payments)}">
+                    <td colspan="8">No payment methods found.</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer class="footer">© <span th:text="${#dates.format(#dates.createNow(),'yyyy')}">2025</span> QuickMart · Payment Manager Panel</footer>
+</body>
+</html>

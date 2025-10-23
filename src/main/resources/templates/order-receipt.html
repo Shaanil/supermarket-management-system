@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickMart — Invoice</title>
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    :root{ --bg:#ffffff; --ink:#111; --muted:#5f6368; --wire:#e5e7eb; --accent:#06c167; --danger:#d32f2f; }
+    *{ box-sizing: border-box }
+    body{ margin:0; background:var(--bg); color:var(--ink); font: 15px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif; }
+
+    .wrap{ max-width: 840px; margin: 28px auto; padding: 24px; border:1px solid var(--wire); border-radius: 12px; }
+    .top{ display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand img{ height: 40px; width:auto; }
+    .brand-name{ font-weight: 800; letter-spacing: .2px; font-size: 18px; }
+    .meta{ text-align:right; }
+    .meta h1{ margin:0; font-size:26px; letter-spacing:-.01em; }
+    .meta .tag{ display:inline-block; padding:4px 10px; border-radius:999px; background:#e8f5e9; color:#1e7e34; border:1px solid #c8e6c9; font-weight:700; font-size:12px; }
+
+    .space{ height: 14px }
+    .hr{ height:1px; background:var(--wire); margin: 14px 0; }
+
+    .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; }
+    .box{ padding:12px; border:1px solid var(--wire); border-radius:10px; background:#fff; }
+    .box h3{ margin:0 0 6px; font-size:14px; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); }
+
+    table{ width:100%; border-collapse:collapse; }
+    th, td{ padding:10px; border:1px solid var(--wire); text-align:left; }
+    th{ background:#f7f9fb; font-weight:700; }
+    .right{ text-align:right }
+
+    .totals{ display:grid; grid-template-columns: 1fr auto; align-items:center; gap: 12px; margin-top: 12px; }
+    .totals .sum{ font-size: 18px; font-weight:800; }
+
+    .print{ margin: 14px 0; display:flex; gap:8px; align-items:center; }
+    .btn{ padding:10px 14px; border-radius:10px; border:1px solid var(--wire); background:#f6f7f9; color:var(--ink); text-decoration:none; cursor:pointer }
+    .btn.primary{ background: var(--accent); color:#fff; border-color:var(--accent); font-weight:700 }
+
+    .muted{ color: var(--muted) }
+
+    @media print{
+      .print{ display:none }
+      .wrap{ border:none; border-radius:0; margin:0; }
+      body{ background:#fff }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <!-- Actions -->
+    <div class="print">
+      <button class="btn primary" onclick="window.print()">Print / Save as PDF</button>
+      <a href="/customer/dashboard" class="btn">Back to Home</a>
+    </div>
+
+    <!-- Header -->
+    <div class="top">
+      <div class="brand">
+        <!-- Change the src below to your real logo path. If you have a Thymeleaf variable like ${logoUrl}, use th:src instead. -->
+        <img src="/assets/logo.svg" alt="QuickMart Logo" th:src="@{/assets/logo.svg}" />
+        <div class="brand-name">QuickMart</div>
+      </div>
+      <div class="meta">
+        <h1>INVOICE</h1>
+        <div>Invoice No: <strong th:text="${order.id}">0000</strong></div>
+        <div>Date: <strong th:text="${#temporals.format(order.orderDate, 'yyyy-MM-dd HH:mm')}">2025-01-01</strong></div>
+        <div class="space"></div>
+        <span class="tag" th:text="${order.deliveryStatus}">DELIVERED</span>
+      </div>
+    </div>
+
+    <div class="space"></div>
+
+    <!-- Addresses / Bill To -->
+    <div class="grid">
+      <div class="box">
+        <h3>Bill To</h3>
+        <div><strong th:text="${order.user.username}">Customer</strong></div>
+        <div th:text="${order.addressLine1}">Address line</div>
+        <div><span th:text="${order.city}">City</span> <span th:text="${order.postalCode}">00000</span></div>
+        <div>Contact: <span th:text="${order.contactNumber}">0000000000</span></div>
+      </div>
+      <div class="box">
+        <h3>From</h3>
+        <div><strong>Team QuickMart</strong></div>
+        <div>Group 115</div>
+        <div>support@quickmart.com</div>
+        <div>+94 71 104 1896</div>
+      </div>
+    </div>
+
+    <div class="space"></div>
+
+    <!-- Line items (optional) -->
+    <div th:if="${orderItems != null}">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:55%">Item</th>
+            <th style="width:15%" class="right">Qty</th>
+            <th style="width:15%" class="right">Price</th>
+            <th style="width:15%" class="right">Line Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="it : ${orderItems}">
+            <td th:text="${it.name}">Product Name</td>
+            <td class="right" th:text="${it.quantity}">1</td>
+            <td class="right" th:text="${it.price}">0.00</td>
+            <td class="right" th:text="${it.price * it.quantity}">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Summary / Fallback table (always visible) -->
+    <div class="space"></div>
+    <table>
+      <tr><th>Payment Type</th><td th:text="${order.paymentType}"></td></tr>
+      <tr><th>Payment Status</th><td th:text="${order.paymentStatus}"></td></tr>
+      <tr><th>Delivery Status</th><td th:text="${order.deliveryStatus}"></td></tr>
+    </table>
+
+    <!-- Totals -->
+    <div class="totals">
+      <div class="muted">Thank you for shopping with QuickMart!</div>
+      <div class="sum">Total: <span th:text="${order.totalAmount}">0.00</span></div>
+    </div>
+
+    <div class="hr"></div>
+    <div class="muted" style="font-size:12px">
+      This is a system generated invoice. If you have questions about this invoice, contact support.
+    </div>
+  </div>
+</body>
+</html>

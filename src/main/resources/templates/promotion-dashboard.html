@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Marketing — Promotions</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="theme-color" content="#ffffff"/>
+  <style>
+    :root{ --bg:#ffffff; --surface:#f6f7f9; --ink:#111; --muted:#5f6368; --accent:#06c167; --accent2:#0077ff; --danger:#d32f2f; --wire:#e5e7eb; --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08); --radius:14px }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+
+    /* Header */
+    header.h{position:sticky;top:0;z-index:5;backdrop-filter:saturate(140%) blur(10px);background:linear-gradient(90deg, rgba(255,255,255,.9), rgba(250,250,255,.9));border-bottom:1px solid var(--wire)}
+    .bar{max-width:1200px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:800}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(6,193,103,.12)}
+
+    /* Layout */
+    .wrap{max-width:1200px;margin:24px auto;padding:0 18px;display:grid;grid-template-columns:1fr;gap:18px}
+    .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .pad{padding:16px}
+
+    h1{font-size:24px;margin:0}
+    h2{font-size:20px;margin:0}
+    .lead{color:var(--muted)}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--wire);background:var(--surface);color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s ease;text-decoration:none;font-weight:600}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.blue{background:var(--accent2);border-color:var(--accent2);color:#fff}
+    .btn.danger{background:#fdecea;border-color:#f5c6cb;color:#c62828}
+    .btn.sm{padding:6px 10px;font-size:13px;border-radius:10px}
+
+    /* Toolbar */
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .field{display:flex;align-items:center;gap:8px;background:transparent;border:none;border-radius:999px;padding:8px 0}
+    .field input{border:none;outline:none;background:rgba(255,255,255,.6);padding:10px 14px;min-width:260px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+    select{padding:10px;border:1px solid var(--wire);border-radius:12px;background:#fff}
+
+    /* Metrics */
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}
+    .metric{background:#fff;border:1px solid var(--wire);border-radius:12px;padding:12px}
+    .metric .k{font-size:20px;font-weight:800}
+    .metric .l{color:var(--muted);font-size:12px}
+
+    /* Table */
+    .table-wrap{overflow:auto;border:1px solid var(--wire);border-radius:12px}
+    table{width:100%;border-collapse:collapse;min-width:980px;background:#fff}
+    th,td{border-bottom:1px solid var(--wire);padding:10px 12px;text-align:left;vertical-align:top;font-size:14px}
+    thead th{position:sticky;top:0;background:var(--surface);text-transform:uppercase;font-size:12px;letter-spacing:.08em;color:var(--muted);z-index:1}
+    tbody tr:hover td{background:#fafafa}
+    .muted{opacity:.7}
+
+    @media (max-width:1050px){ .wrap{grid-template-columns:1fr} .metrics{grid-template-columns:1fr} }
+    @media print{ header.h,.btn,.toolbar{display:none} .wrap{margin:0} .card{box-shadow:none;border-color:#ddd} }
+  </style>
+</head>
+<body>
+<header class="h">
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> QuickMart Marketing</div>
+    <div class="toolbar">
+      <a class="btn primary sm" th:href="@{/marketing/dashboard}">+ New Promotion</a>
+      <button type="button" class="btn blue sm" id="csvBtn">Export CSV</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- LEFT: List & Filters -->
+  <section class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap">
+      <div>
+        <h1>Promotions</h1>
+        <div class="lead">Create, prioritize, and toggle the homepage carousel.</div>
+      </div>
+      <div class="toolbar">
+        <div class="field" role="search">
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.867-3.834zM12 6.5a5.5 5.5 0 1 1-11 0a5.5 5.5 0 0 1 11 0"/></svg>
+          <input id="q" type="text" placeholder="Search title or description" aria-label="Search" />
+        </div>
+        <label class="lead" for="fActive">Active</label>
+        <select id="fActive">
+          <option value="">All</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+        <label class="lead" for="fSort">Sort</label>
+        <select id="fSort">
+          <option value="prio">Priority (0 first)</option>
+          <option value="title">Title (A–Z)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="metrics" aria-live="polite">
+      <div class="metric"><div class="k" id="mTotal">0</div><div class="l">Total</div></div>
+      <div class="metric"><div class="k" id="mActive">0</div><div class="l">Active</div></div>
+      <div class="metric"><div class="k" id="mDrafts">0</div><div class="l">Inactive</div></div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:12px">
+      <table id="promoTable">
+        <thead>
+        <tr>
+          <th style="width:56px;">ID</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Image URL</th>
+          <th style="width:80px;">Active</th>
+          <th style="width:80px;">Priority</th>
+          <th style="width:220px;">Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${promotions}"
+            th:attr="data-title=${p.title}, data-desc=${p.description}, data-active=${p.active} ? 'Yes' : 'No', data-priority=${p.priority}">
+          <td th:text="${p.id}">1</td>
+          <td>
+            <div th:text="${p.title}">Title</div>
+            <div class="muted" th:if="${#strings.isEmpty(p.title)}">Title Under Construction</div>
+          </td>
+          <td>
+            <div th:text="${p.description}">Description...</div>
+            <div class="muted" th:if="${#strings.isEmpty(p.description)}">Await for Promotional materials</div>
+          </td>
+          <td>
+            <a th:if="${p.imageUrl}" th:href="${p.imageUrl}" target="_blank" th:text="${p.imageUrl}">/images/promo/pic.jpg</a>
+            <span th:if="${p.imageUrl == null}">—</span>
+          </td>
+          <td th:text="${p.active} ? 'Yes' : 'No'">Yes</td>
+          <td th:text="${p.priority}">0</td>
+          <td class="actions" style="display:flex;gap:8px;flex-wrap:wrap">
+            <a class="btn sm" th:href="@{/marketing/edit/{id}(id=${p.id})}">Edit</a>
+            <form th:action="@{/marketing/delete/{id}(id=${p.id})}" method="post" onsubmit="return confirm('Delete this promotion?');" style="display:inline">
+              <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+              <button class="btn danger sm" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(promotions)}"><td colspan="7">No promotions found.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- RIGHT: Inline Create/Edit Form -->
+  <section class="card pad">
+    <h2 th:text="${mode == 'edit'} ? 'Edit Promotion' : 'New Promotion'">New Promotion</h2>
+    <form th:action="@{/marketing/save}" method="post" th:object="${promotion}" autocomplete="off">
+      <input type="hidden" th:if="${mode == 'edit'}" th:field="*{id}"/>
+
+      <label style="display:block;margin:10px 0 6px;font-weight:600">Title</label>
+      <input type="text" th:field="*{title}" placeholder="e.g., Weekend Saver" style="width:100%;padding:10px;border:1px solid var(--wire);border-radius:10px"/>
+
+      <label style="display:block;margin:10px 0 6px;font-weight:600">Description</label>
+      <textarea th:field="*{description}" rows="5" placeholder="Short, punchy copy for the carousel" style="width:100%;padding:10px;border:1px solid var(--wire);border-radius:10px"></textarea>
+
+      <div style="display:flex;gap:12px">
+        <div style="flex:1">
+          <label style="display:block;margin:10px 0 6px;font-weight:600">Image URL (optional)</label>
+          <input type="text" th:field="*{imageUrl}" placeholder="/images/promo/weekend.jpg or https://..." style="width:100%;padding:10px;border:1px solid var(--wire);border-radius:10px"/>
+        </div>
+        <div style="flex:1">
+          <label style="display:block;margin:10px 0 6px;font-weight:600">Priority (1 = highest)</label>
+          <select th:field="*{priority}" style="width:100%;padding:10px;border:1px solid var(--wire);border-radius:10px">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+        <label style="font-weight:600">Active?</label>
+        <input type="checkbox" th:field="*{active}"/>
+      </div>
+
+      <div style="margin-top:14px; display:flex; gap:8px;flex-wrap:wrap">
+        <button class="btn primary" type="submit" th:text="${mode == 'edit'} ? 'Save' : 'Create'">Create</button>
+        <a class="btn" th:href="@{/marketing/dashboard}">Cancel</a>
+      </div>
+    </form>
+
+    <p class="muted" th:if="${mode == 'create'}" style="margin-top:10px">Tip: click <b>Edit</b> on any row or <b>+ New Promotion</b> to use this form.</p>
+  </section>
+</main>
+
+<script>
+  (function(){
+    function $(s,root=document){return root.querySelector(s)}
+    function $all(s,root=document){return Array.from(root.querySelectorAll(s))}
+    function text(el){return (el&&(el.textContent||'').trim())||''}
+
+    const q=$('#q'); const fActive=$('#fActive'); const fSort=$('#fSort');
+
+    function applyFilters(){
+      const query=(q?.value||'').toLowerCase();
+      const wantActive=fActive?.value||'';
+      const rows=$all('#promoTable tbody tr').filter(tr=>tr.querySelector('td'));
+      rows.forEach(tr=>{
+        const title=(tr.getAttribute('data-title')||text(tr.children[1])).toLowerCase();
+        const desc=(tr.getAttribute('data-desc')||text(tr.children[2])).toLowerCase();
+        const active=(tr.getAttribute('data-active')||text(tr.children[4])||'').trim();
+        let ok=true;
+        if(query) ok = ok && (title.includes(query) || desc.includes(query));
+        if(wantActive) ok = ok && (active===wantActive);
+        tr.style.display = ok ? '' : 'none';
+      });
+      recomputeMetrics();
+      applySort();
+    }
+
+    function applySort(){
+      const tbody=$('#promoTable tbody');
+      const rows=$all('#promoTable tbody tr').filter(r=>r.style.display!=="none");
+      const mode=fSort?.value||'prio';
+      rows.sort((a,b)=>{
+        if(mode==='title'){
+          const A=text(a.children[1]).toLowerCase();
+          const B=text(b.children[1]).toLowerCase();
+          return A.localeCompare(B);
+        }else{
+          const A=parseInt(a.getAttribute('data-priority')||text(a.children[5])||'0',10)||0;
+          const B=parseInt(b.getAttribute('data-priority')||text(b.children[5])||'0',10)||0;
+          return A-B; // 0 first
+        }
+      });
+      // re-append visible rows in order
+      rows.forEach(r=>tbody.appendChild(r));
+    }
+
+    function recomputeMetrics(){
+      const allRows=$all('#promoTable tbody tr').filter(tr=>tr.querySelector('td'));
+      const visible=allRows.filter(r=>r.style.display!=="none");
+      const active=visible.filter(r=> (r.getAttribute('data-active')||text(r.children[4]))==='Yes');
+      $('#mTotal').textContent=visible.length;
+      $('#mActive').textContent=active.length;
+      $('#mDrafts').textContent=visible.length - active.length;
+    }
+
+    // CSV export (visible rows)
+    function csvEscape(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }
+    function exportCSV(){
+      const rows=$all('#promoTable tbody tr').filter(r=>r.style.display!=="none");
+      const headers=['ID','Title','Description','Image URL','Active','Priority'];
+      const data=rows.map(r=>[0,1,2,3,4,5].map(i=>text(r.children[i])));
+      const lines=[headers.join(',')].concat(data.map(r=>r.map(csvEscape).join(',')));
+      const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+      const ts=new Date();
+      const fname=`promotions-${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}-${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}.csv`;
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    // Events
+    q?.addEventListener('input', applyFilters);
+    fActive?.addEventListener('change', applyFilters);
+    fSort?.addEventListener('change', applyFilters);
+    $('#csvBtn')?.addEventListener('click', exportCSV);
+
+    document.addEventListener('DOMContentLoaded', ()=>{ applyFilters(); });
+  })();
+</script>
+</body>
+</html>

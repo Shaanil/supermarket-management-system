@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head><title>My Orders</title></head>
+<body>
+<h2>My Orders</h2>
+<table border="1" cellpadding="10">
+    <tr><th>ID</th><th>Date</th><th>Total</th><th>Payment</th><th>Delivery</th></tr>
+    <tr th:each="o : ${orders}">
+        <td th:text="${o.id}"></td>
+        <td th:text="${#temporals.format(o.orderDate, 'yyyy-MM-dd HH:mm')}"></td>
+        <td th:text="${o.totalAmount}"></td>
+        <td th:text="${o.paymentStatus}"></td>
+        <td th:text="${o.deliveryStatus}"></td>
+    </tr>
+</table>
+<a href="/customer/dashboard">⬅️ Back to Shop</a>
+</body>
+</html>

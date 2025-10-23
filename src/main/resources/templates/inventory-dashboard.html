@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>QuickMart — Inventory Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    :root{
+      --bg:#ffffff; --surface:#f7f8fa; --ink:#0a0a0a; --muted:#6b7280; --accent:#06c167; --accent2:#0a84ff; --danger:#c62828; --wire:#e6e8ec; --card:#ffffff; --shadow:0 12px 28px rgba(0,0,0,.06);
+      --radius:16px; --radius-sm:12px; --radius-lg:24px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+
+    /* Header */
+    header.h{position:sticky;top:0;z-index:10;backdrop-filter:saturate(140%) blur(12px);background:linear-gradient(90deg, rgba(255,255,255,.9), rgba(248,250,255,.92));border-bottom:1px solid var(--wire)}
+    .bar{max-width:1100px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:800;letter-spacing:.2px}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(6,193,103,.12)}
+    .who{color:var(--muted)}
+
+    /* Layout */
+    .wrap{max-width:1100px;margin:24px auto;padding:0 18px;display:grid;gap:20px}
+    .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .pad{padding:18px}
+
+    h1{font-size:28px;margin:0 0 4px 0;letter-spacing:-.01em}
+    h2{font-size:20px;margin:0}
+    .lead{color:var(--muted)}
+
+    /* Toolbar */
+    .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .field{display:flex;align-items:center;gap:8px;background:transparent;border:none;border-radius:999px;padding:8px 0;box-shadow:none}
+    .field input{border:none;outline:none;background:rgba(255,255,255,.6);padding:10px 14px;min-width:250px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,.08);}
+    select{padding:10px;border:1px solid var(--wire);border-radius:12px;background:#fff}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--wire);background:#fff;color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.18s ease;text-decoration:none;font-weight:600}
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+    .btn.primary:hover{background:#04a85a;border-color:#04a85a}
+    .btn.ghost{background:transparent}
+    .btn.sm{padding:6px 10px;font-size:13px;border-radius:10px}
+    .btn.blue{background:var(--accent2);border-color:var(--accent2);color:#fff}
+    .btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+
+    /* Metrics */
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
+    .metric{background:#fff;border:1px solid var(--wire);border-radius:14px;padding:14px}
+    .metric .k{font-size:22px;font-weight:800;letter-spacing:-.01em}
+    .metric .l{color:var(--muted);font-size:13px;margin-top:2px}
+
+    /* Table */
+    .table-wrap{overflow:auto;border:1px solid var(--wire);border-radius:14px}
+    table{width:100%;border-collapse:collapse;min-width:900px;background:#fff}
+    th,td{border-bottom:1px solid var(--wire);padding:12px 12px;text-align:center;font-size:14px}
+    thead th{position:sticky;top:0;background:var(--surface);text-transform:uppercase;font-size:12px;letter-spacing:.08em;color:var(--muted);z-index:1}
+    tbody tr:hover td{background:#fafafa}
+    td.left{text-align:left}
+
+    img.thumb{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--wire)}
+    .qty-low{background:#fff8e1}
+    .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--wire);background:var(--surface)}
+    .chip.low{background:#fff3cd;border-color:#ffeeba;color:#8a6d3b}
+
+    /* Form */
+    form.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;align-items:start}
+    label.sr{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,1px,1px);white-space:nowrap;border:0}
+    input[type=text], input[type=number]{padding:12px;border:1px solid var(--wire);border-radius:12px;width:100%;background:#fff}
+    .form-actions{display:flex;gap:10px;align-items:center}
+
+    @media (max-width:900px){ form.grid{grid-template-columns:1fr 1fr 1fr} .metrics{grid-template-columns:1fr} }
+    @media (max-width:600px){ form.grid{grid-template-columns:1fr} .field input{min-width:0;width:100%} }
+
+    /* Focus */
+    :focus-visible{outline:3px solid rgba(10,132,255,.35);outline-offset:2px;border-radius:12px}
+
+    @media (prefers-reduced-motion: reduce){ .btn:hover{transform:none} }
+
+    @media print{ header.h,.toolbar,.btn,.form-actions{display:none} .wrap{margin:0} .card{box-shadow:none;border-color:#ddd} }
+  </style>
+</head>
+<body>
+<header class="h">
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> QuickMart · Inventory Manager</div>
+    <div class="toolbar">
+      <a th:href="@{/inventory/report}" class="btn blue sm">Download Report</a>
+      <form th:action="@{/logout}" method="get" style="display:inline">
+        <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <button type="submit" class="btn danger sm">Logout</button>
+      </form>
+    </div>
+    <div class="who" th:text="${'User: ' + (session.loggedInUser != null ? session.loggedInUser.username : 'Guest')}"></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card pad">
+    <!-- Live metrics: based on current visible rows -->
+    <div class="metrics" aria-live="polite">
+      <div class="metric"><div class="k" id="mSku">0</div><div class="l">Visible SKUs</div></div>
+      <div class="metric"><div class="k" id="mLow">0</div><div class="l">Low Stock (≤5)</div></div>
+      <div class="metric"><div class="k" id="mOut">0</div><div class="l">Out of Stock</div></div>
+    </div>
+
+    <h2 style="margin-top:14px">Add / Update Product</h2>
+    <form th:action="@{/inventory/save}" method="post" th:object="${newProduct}" class="grid" autocomplete="off">
+      <input type="hidden" id="prodIdHidden" th:name="${newProduct.id} != null ? 'id' : null" th:value="${newProduct.id} != null ? newProduct.id : ''">
+
+      <label for="fName" class="sr">Product Name</label>
+      <input id="fName" type="text" th:field="*{name}" placeholder="Product Name" required>
+
+      <label for="fCat" class="sr">Category</label>
+      <input id="fCat" type="text" th:field="*{category}" placeholder="Category" required>
+
+      <label for="fPrice" class="sr">Price</label>
+      <input id="fPrice" type="number" step="0.01" th:field="*{price}" placeholder="Price" required>
+
+      <label for="fQty" class="sr">Quantity</label>
+      <input id="fQty" type="number" th:field="*{quantity}" placeholder="Quantity" required>
+
+      <label for="fImg" class="sr">Image URL</label>
+      <input id="fImg" type="text" th:field="*{imageUrl}" placeholder="Image URL">
+        <button type="submit" class="btn primary">Save Product</button>
+        <div class="form-actions" style="grid-column:1/-1">
+
+        </div>
+    </form>
+  </section>
+
+  <section class="card pad">
+    <h2>Products</h2>
+    <div class="toolbar" style="margin-top:8px;justify-content:flex-end">
+      <div class="field" role="search">
+        <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.867-3.834zM12 6.5a5.5 5.5 0 1 1-11 0a5.5 5.5 0 0 1 11 0"/></svg>
+        <input id="q" type="text" placeholder="Search products or categories" aria-label="Search" />
+      </div>
+      <label class="lead" for="catFilter">Category</label>
+      <select id="catFilter"><option value="">All</option></select>
+      <label class="lead" for="stockFilter">Stock</label>
+      <select id="stockFilter">
+        <option value="">All</option>
+        <option value="low">Low (≤5)</option>
+        <option value="out">Out (0)</option>
+      </select>
+    </div>
+    <div class="table-wrap" style="margin-top:8px">
+      <table id="prodTable">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Image</th>
+          <th class="left">Name</th>
+          <th class="left">Category</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Added By</th>
+          <th>Created</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="p : ${products}"
+            th:attr="data-name=${p.name}, data-category=${p.category}, data-qty=${p.quantity}">
+          <td th:text="${p.id}"></td>
+          <td><img class="thumb" th:src="${p.imageUrl}" alt="no image"></td>
+          <td class="left" th:text="${p.name}"></td>
+          <td class="left" th:text="${p.category}"></td>
+          <td th:text="${p.price}"></td>
+          <td>
+            <span th:text="${p.quantity}"></span>
+            <span class="chip low" th:if="${p.quantity <= 5}" th:text="${p.quantity == 0 ? 'Out' : 'Low'}"></span>
+          </td>
+          <td th:text="${p.addedBy}"></td>
+          <td th:text="${#temporals.format(p.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+          <td>
+            <a href="#" class="edit-btn"
+               th:attr="data-id=${p.id},data-name=${p.name},data-category=${p.category},data-price=${p.price},data-quantity=${p.quantity},data-image=${p.imageUrl}">Edit</a>
+            &nbsp;|&nbsp;
+            <a th:href="@{'/inventory/delete/' + ${p.id}}" style="color:#c62828">Delete</a>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(products)}"><td colspan="9">No products found.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  (function(){
+    function $(s,root=document){return root.querySelector(s)}
+    function $all(s,root=document){return Array.from(root.querySelectorAll(s))}
+    function text(el){return (el && (el.textContent||'').trim())||''}
+
+    // Elements
+    const q=$('#q'), catSel=$('#catFilter'), stockSel=$('#stockFilter');
+
+    // Build category options from table
+    function buildCats(){
+      const set=new Set(['']);
+      $all('#prodTable tbody tr').forEach(tr=>{ const c=text(tr.children[3]); if(c) set.add(c); });
+      catSel.innerHTML='';
+      set.forEach(v=>{ const opt=document.createElement('option'); opt.value=v; opt.textContent=v||'All'; catSel.appendChild(opt); });
+    }
+
+    function applyFilters(){
+      const query=(q?.value||'').toLowerCase();
+      const wantCat=catSel.value||'';
+      const stock=stockSel.value||'';
+      $all('#prodTable tbody tr').forEach(tr=>{
+        const name=(tr.getAttribute('data-name')||text(tr.children[2])).toLowerCase();
+        const cat=(tr.getAttribute('data-category')||text(tr.children[3]));
+        const qty=parseInt(tr.getAttribute('data-qty')||text(tr.children[5])||'0',10)||0;
+        let ok=true;
+        if(query) ok = ok && (name.includes(query) || (cat||'').toLowerCase().includes(query));
+        if(wantCat) ok = ok && (cat===wantCat);
+        if(stock==='low') ok = ok && (qty>0 && qty<=5);
+        if(stock==='out') ok = ok && (qty===0);
+        tr.style.display = ok ? '' : 'none';
+        tr.classList.toggle('qty-low', ok && qty>0 && qty<=5);
+      });
+      recomputeMetrics();
+    }
+
+    function recomputeMetrics(){
+      const rows=$all('#prodTable tbody tr').filter(r=>r.style.display!=="none");
+      let sku=0, low=0, out=0;
+      rows.forEach(r=>{ sku++; const q=parseInt(r.getAttribute('data-qty')||text(r.children[5])||'0',10)||0; if(q===0) out++; else if(q<=5) low++; });
+      $('#mSku').textContent=sku; $('#mLow').textContent=low; $('#mOut').textContent=out;
+    }
+
+    // CSV export of visible rows
+    function csvEscape(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }
+    function exportCSV(){
+      const rows=$all('#prodTable tbody tr').filter(r=>r.style.display!=="none");
+      const headers=['ID','Name','Category','Price','Quantity','Added By','Created'];
+      const data=rows.map(r=>[
+        text(r.children[0]),
+        text(r.children[2]),
+        text(r.children[3]),
+        text(r.children[4]),
+        text(r.children[5].querySelector('span')),
+        text(r.children[6]),
+        text(r.children[7])
+      ]);
+      const lines=[headers.join(',')].concat(data.map(r=>r.map(csvEscape).join(',')));
+      const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+      const ts=new Date();
+      const fname=`inventory-${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}-${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}.csv`;
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fname; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    // Edit buttons -> fill form
+    function bindEdits(){
+      $all('.edit-btn').forEach(btn=>{
+        btn.addEventListener('click', e=>{
+          e.preventDefault();
+          const id=btn.dataset.id, name=btn.dataset.name, category=btn.dataset.category, price=btn.dataset.price, quantity=btn.dataset.quantity, imageUrl=btn.dataset.image;
+          const idEl=document.getElementById('prodIdHidden');
+          if(idEl){ idEl.setAttribute('name','id'); idEl.value=id||''; }
+          document.querySelector('[name="name"]').value=name||'';
+          document.querySelector('[name="category"]').value=category||'';
+          document.querySelector('[name="price"]').value=price||'';
+          document.querySelector('[name="quantity"]').value=quantity||'';
+          document.querySelector('[name="imageUrl"]').value=imageUrl||'';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          $('#fName')?.focus();
+        });
+      });
+    }
+
+    // Clear form
+    function clearForm(){
+      const idEl=document.getElementById('prodIdHidden');
+      if(idEl){ idEl.removeAttribute('name'); idEl.value=''; }
+      ['name','category','price','quantity','imageUrl'].forEach(n=>{ const el=document.querySelector(`[name="${n}"]`); if(el) el.value=''; });
+      $('#fName')?.focus();
+    }
+
+    // Shortcuts
+    document.addEventListener('keydown', (e)=>{
+      if(e.key==='/' && document.activeElement.tagName!=='INPUT'){ e.preventDefault(); $('#q')?.focus(); }
+      if((e.key==='n' || e.key==='N') && (e.ctrlKey || e.metaKey)){ e.preventDefault(); clearForm(); }
+    });
+
+    // Events
+    $('#q')?.addEventListener('input', applyFilters);
+    $('#catFilter')?.addEventListener('change', applyFilters);
+    $('#stockFilter')?.addEventListener('change', applyFilters);
+    $('#csvBtn')?.addEventListener('click', exportCSV);
+    $('#clearBtn')?.addEventListener('click', clearForm);
+
+    // Init
+    document.addEventListener('DOMContentLoaded', ()=>{ buildCats(); bindEdits(); applyFilters(); });
+  })();
+</script>
+</body>
+</html>

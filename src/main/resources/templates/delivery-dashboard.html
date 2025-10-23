@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QuickMart — Delivery Manager Dashboard</title>
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    :root{
+      --bg:#ffffff; --surface:#f6f7f9; --ink:#111111; --muted:#5f6368; --accent:#06c167; --accent2:#0077ff; --danger:#d32f2f; --wire:#e5e7eb; --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:14px; --radius-sm:10px; --radius-lg:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+
+    /* Header */
+    header.h{position:sticky;top:0;z-index:5;backdrop-filter:saturate(140%) blur(10px);background:linear-gradient(90deg, rgba(255,255,255,.9), rgba(250,250,255,.9));border-bottom:1px solid var(--wire)}
+    .bar{max-width:1200px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:800}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(6,193,103,.12)}
+
+    /* Layout */
+    .wrap{max-width:1200px;margin:24px auto;padding:0 18px;display:grid;gap:20px}
+    .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .pad{padding:18px}
+
+    h1{font-size:24px;letter-spacing:-.01em;margin:0}
+    h2{font-size:20px;margin:0}
+    .lead{color:var(--muted)}
+
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--wire);background:var(--surface);color:var(--ink);padding:10px 14px;border-radius:12px;cursor:pointer;transition:.2s ease;text-decoration:none;font-weight:600}
+    .btn:hover{transform:translateY(-1px)}
+    .btn-print{background:var(--accent2);border-color:var(--accent2);color:#fff}
+    .btn-logout{background:#e8eaed;color:#111}
+    .btn-action{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .btn-action:hover{background:#04a85a;border-color:#04a85a}
+    .btn-received{background:#fff8e1;color:#8a6d3b;border-color:#ffecb3}
+    .btn-ship{background:#e3f2fd;color:#1565c0;border-color:#bbdefb}
+    .btn-deliver{background:#ede7f6;color:#6a1b9a;border-color:#d1c4e9}
+
+    /* Chips & legend */
+    .legend{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;border:1px solid var(--wire);background:var(--surface)}
+    .chip.pending{background:#fff8e1;border-color:#ffecb3;color:#8a6d3b}
+    .chip.assigned{background:#e0f7fa;border-color:#b2ebf2;color:#006064}
+    .chip.shipped{background:#e8f5e9;border-color:#c8e6c9;color:#1e7e34}
+    .chip.delivered{background:#ede7f6;border-color:#d1c4e9;color:#6a1b9a}
+
+    /* Tables */
+    .table-wrap{overflow:auto;border:1px solid var(--wire);border-radius:12px}
+    table{width:100%;border-collapse:collapse;min-width:980px;background:#fff}
+    th,td{border-bottom:1px solid var(--wire);padding:10px 12px;text-align:center;font-size:14px}
+    thead th{position:sticky;top:0;background:var(--surface);text-transform:uppercase;font-size:12px;letter-spacing:.08em;color:var(--muted);z-index:1}
+    tbody tr:hover td{background:#fafafa}
+
+    /* Forms */
+    select,input[type=text]{padding:8px 10px;border:1px solid var(--wire);border-radius:10px;font-size:14px;background:#fff}
+    form.inline{display:flex;gap:8px;align-items:center;justify-content:center;flex-wrap:wrap}
+
+    .footer{ text-align:center; font-size:13px; color: #666; margin: 20px 0 30px }
+
+    @media (max-width:720px){
+      .bar{flex-wrap:wrap;gap:10px}
+      .wrap{gap:14px}
+      table{min-width:720px}
+    }
+
+    @media print{
+      header.h,.footer,.btn{display:none}
+      .wrap{margin:0}
+      .card{box-shadow:none;border-color:#ddd}
+    }
+  </style>
+</head>
+<body>
+<header class="h">
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> QuickMart</div>
+    <div class="row" style="display:flex;gap:8px;align-items:center">
+      <button onclick="generateReport()" class="btn btn-print">Generate Report</button>
+      <a href="/logout" class="btn btn-logout">Logout</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap">
+      <div>
+        <h1>🚚 Orders Overview</h1>
+        <div class="lead">Assign drivers and update delivery statuses.</div>
+      </div>
+      <div class="legend">
+        <strong>Status:</strong>
+        <span class="chip pending">PENDING</span>
+        <span class="chip assigned">ASSIGNED</span>
+        <span class="chip shipped">SHIPPED</span>
+        <span class="chip delivered">DELIVERED</span>
+      </div>
+      <div class="row" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+        <label for="filterStatus" class="lead">Status</label>
+        <select id="filterStatus">
+          <option value="">All</option>
+          <option value="PENDING">PENDING</option>
+          <option value="ASSIGNED">ASSIGNED</option>
+          <option value="RECEIVED">RECEIVED</option>
+          <option value="SHIPPED">SHIPPED</option>
+          <option value="DELIVERED">DELIVERED</option>
+        </select>
+        <label for="filterDriver" class="lead" style="margin-left:8px">Driver</label>
+        <select id="filterDriver">
+          <option value="">All Drivers</option>
+          <option th:each="d : ${drivers}" th:value="${d.name}" th:text="${d.name}"></option>
+        </select>
+      </div>
+    </div>
+
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Payment Status</th>
+            <th>Delivery Status</th>
+            <th>Address</th>
+            <th>Driver</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr th:each="o : ${orders}"
+            th:attr="data-status=${o.deliveryStatus}, data-driver=${o.driver != null ? o.driver.name : 'UNASSIGNED'}, data-total=${o.totalAmount}">
+          <td th:text="${o.id}"></td>
+          <td th:text="${o.user.username}"></td>
+          <td th:text="${o.totalAmount}"></td>
+          <td th:text="${o.paymentType}"></td>
+          <td>
+            <span class="chip" th:text="${o.paymentStatus}"></span>
+          </td>
+          <td>
+            <span class="chip" th:classappend="${o.deliveryStatus=='PENDING'} ? ' pending' : (${o.deliveryStatus=='ASSIGNED'} ? ' assigned' : (${o.deliveryStatus=='SHIPPED'} ? ' shipped' : ' delivered'))" th:text="${o.deliveryStatus}"></span>
+          </td>
+          <td style="text-align:left">
+            <div th:text="${o.addressLine1}"></div>
+            <small class="lead" th:text="${o.city + ' - ' + o.postalCode}"></small>
+          </td>
+          <td>
+            <form class="inline" th:action="@{/delivery/assign}" method="post">
+              <input type="hidden" name="orderId" th:value="${o.id}">
+              <select name="driverId" required>
+                <option value="">-- Select Driver --</option>
+                <option th:each="d : ${drivers}" th:value="${d.id}" th:text="${d.name + ' (' + d.vehicleNumber + ') - ' + d.status}" th:if="${d.status == 'AVAILABLE'}"></option>
+              </select>
+              <button type="submit" class="btn btn-action">Assign</button>
+            </form>
+            <div th:if="${o.driver != null}">
+              <small><strong>Current:</strong> <span th:text="${o.driver.name}"></span></small>
+            </div>
+          </td>
+          <td>
+            <form class="inline" th:action="@{/delivery/status}" method="post">
+              <input type="hidden" name="orderId" th:value="${o.id}">
+              <input type="hidden" name="status" value="RECEIVED">
+              <button th:if="${o.deliveryStatus == 'ASSIGNED'}" type="submit" class="btn btn-received">Received</button>
+            </form>
+
+            <form class="inline" th:action="@{/delivery/status}" method="post">
+              <input type="hidden" name="orderId" th:value="${o.id}">
+              <input type="hidden" name="status" value="SHIPPED">
+              <button th:if="${o.deliveryStatus == 'RECEIVED'}" type="submit" class="btn btn-ship">Ship</button>
+            </form>
+
+            <form class="inline" th:action="@{/delivery/status}" method="post">
+              <input type="hidden" name="orderId" th:value="${o.id}">
+              <input type="hidden" name="status" value="DELIVERED">
+              <button th:if="${o.deliveryStatus == 'SHIPPED'}" type="submit" class="btn btn-deliver">Delivered</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(orders)}">
+          <td colspan="9">No orders found.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card pad">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap">
+      <div>
+        <h2>👨‍✈️ Driver Overview</h2>
+        <div class="lead">Add new drivers and update their status.</div>
+      </div>
+    </div>
+
+    <form th:action="@{/delivery/drivers/add}" method="post" class="inline" style="margin-top:12px;justify-content:flex-start">
+      <input type="text" name="name" placeholder="Driver Name" required>
+      <input type="text" name="contactNumber" placeholder="Contact Number" required>
+      <input type="text" name="vehicleNumber" placeholder="Vehicle Number" required>
+      <button type="submit" class="btn btn-action">Add Driver</button>
+    </form>
+
+    <div class="table-wrap" style="margin-top:12px">
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Vehicle</th>
+            <th>Status</th>
+            <th>Update</th>
+          </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${drivers}">
+          <td th:text="${d.id}"></td>
+          <td th:text="${d.name}"></td>
+          <td th:text="${d.contactNumber}"></td>
+          <td th:text="${d.vehicleNumber}"></td>
+          <td>
+            <span class="chip" th:classappend="${d.status=='AVAILABLE'} ? ' shipped' : (${d.status=='ON_DELIVERY'} ? ' assigned' : ' pending')" th:text="${d.status}"></span>
+          </td>
+          <td>
+            <form th:action="@{/delivery/drivers/status}" method="post" class="inline">
+              <input type="hidden" name="driverId" th:value="${d.id}">
+              <select name="status">
+                <option th:selected="${d.status == 'AVAILABLE'}">AVAILABLE</option>
+                <option th:selected="${d.status == 'ON_DELIVERY'}">ON_DELIVERY</option>
+                <option th:selected="${d.status == 'INACTIVE'}">INACTIVE</option>
+              </select>
+              <button type="submit" class="btn btn-action">Update</button>
+            </form>
+            <form th:action="@{/delivery/drivers/remove/{driverId}(driverId=${d.id})}" method="post" class="inline">
+              <button type="submit" class="btn btn-logout" onclick="return confirm('Are you sure you want to remove this driver?');">Remove</button>
+            </form>
+          </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(drivers)}">
+          <td colspan="6">No drivers in the system yet.</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<div class="footer">© 2025 QuickMart | Delivery Manager Panel</div>
+</body>
+<script>
+  (function(){
+    function $(sel, root=document){ return root.querySelector(sel); }
+    function $all(sel, root=document){ return Array.from(root.querySelectorAll(sel)); }
+    function text(el){ return (el && (el.textContent||'').trim()) || ''; }
+    function normStatus(s){ return (s||'').toString().trim().toUpperCase(); }
+
+    const statusSel = $('#filterStatus');
+    const driverSel = $('#filterDriver');
+
+    function applyFilters(){
+      const wantStatus = normStatus(statusSel.value);
+      const wantDriver = (driverSel.value||'').trim();
+      $all('tbody tr[th\\:each], tbody tr[data-status]').forEach(tr => {
+        const rowStatus = normStatus(tr.getAttribute('data-status') || text(tr.querySelector('td:nth-child(6)')));
+        const rowDriver = (tr.getAttribute('data-driver') || text(tr.querySelector('td:nth-child(8) .inline + div small span')) || 'UNASSIGNED').trim();
+        const okStatus = !wantStatus || rowStatus === wantStatus;
+        const okDriver = !wantDriver || rowDriver === wantDriver;
+        tr.style.display = (okStatus && okDriver) ? '' : 'none';
+      });
+    }
+
+    function summarizeVisible(){
+      const rows = $all('tbody tr[data-status]').filter(tr => tr.style.display !== 'none');
+      const sum = { totalOrders: rows.length, byStatus:{}, byDriver:{}, totalAmount:0 };
+      rows.forEach(tr => {
+        const st = normStatus(tr.getAttribute('data-status'));
+        const dv = (tr.getAttribute('data-driver')||'UNASSIGNED').trim();
+        const amt = parseFloat(tr.getAttribute('data-total')||'0')||0;
+        sum.byStatus[st] = (sum.byStatus[st]||0)+1;
+        sum.byDriver[dv] = (sum.byDriver[dv]||0)+1;
+        sum.totalAmount += amt;
+      });
+      return sum;
+    }
+
+    function csvEscape(v){ return '"'+String(v).replace(/"/g,'""')+'"'; }
+
+    window.generateReport = function(){
+      applyFilters();
+      const rows = $all('tbody tr[data-status]').filter(tr => tr.style.display !== 'none');
+      const headers = ['ID','Customer','Total','Payment','Payment Status','Delivery Status','Address','Driver'];
+      const dataRows = rows.map(tr => [
+        text(tr.children[0]),
+        text(tr.children[1]),
+        text(tr.children[2]),
+        text(tr.children[3]),
+        text(tr.children[4]),
+        text(tr.children[5]),
+        (function(){ const a=text(tr.children[6].querySelector('div')); const b=text(tr.children[6].querySelector('small')); return (a+(b?(' | '+b):'')); })(),
+        (function(){ const cur=tr.querySelector('td:nth-child(8) div small span'); return cur? text(cur) : (tr.getAttribute('data-driver')||'UNASSIGNED'); })()
+      ]);
+      const summary = summarizeVisible();
+      const lines = [];
+      lines.push('# Report Date,'+ new Date().toISOString());
+      lines.push('# Visible Orders,'+ summary.totalOrders);
+      lines.push('# Total Amount,'+ summary.totalAmount.toFixed(2));
+      Object.keys(summary.byStatus).forEach(k=>{ lines.push('# Status '+k+','+summary.byStatus[k]); });
+      Object.keys(summary.byDriver).forEach(k=>{ lines.push('# Driver '+k+','+summary.byDriver[k]); });
+      lines.push(headers.join(','));
+      dataRows.forEach(r=> lines.push(r.map(csvEscape).join(',')) );
+      const blob = new Blob([lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+      const ts = new Date();
+      const fname = `delivery-report-${ts.getFullYear()}${String(ts.getMonth()+1).padStart(2,'0')}${String(ts.getDate()).padStart(2,'0')}-${String(ts.getHours()).padStart(2,'0')}${String(ts.getMinutes()).padStart(2,'0')}.csv`;
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = fname; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    }
+
+    if(statusSel) statusSel.addEventListener('change', applyFilters);
+    if(driverSel) driverSel.addEventListener('change', applyFilters);
+    applyFilters();
+  })();
+</script>
+</html>
