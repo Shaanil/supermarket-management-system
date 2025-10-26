@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>QuickMart – Delivery Manager Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f8f9fa;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #0d6efd;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        header h1 { margin: 0; font-size: 22px; }
+        .btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .btn-print { background: #17a2b8; }
+        .btn-logout { background: #6c757d; }
+        .btn-action { background: #0d6efd; }
+        .btn-received { background: #ffc107; color: black; }
+        .btn-ship { background: #198754; }
+        .btn-deliver { background: #6f42c1; }
+        .container {
+            max-width: 1300px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,.1);
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+        th {
+            background: #0d6efd;
+            color: white;
+        }
+        tr:nth-child(even) { background: #f2f2f2; }
+        select, input {
+            padding: 6px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 13px;
+        }
+        form.add-driver {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            align-items: center;
+        }
+        .legend span {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 4px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: white;
+        }
+        .pending { background: #ffc107; color: black; }
+        .assigned { background: #0dcaf0; }
+        .shipped { background: #198754; }
+        .delivered { background: #6f42c1; }
+        .footer { text-align: center; font-size: 13px; color: #666; margin-top: 30px; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>QuickMart – Delivery Manager Dashboard</h1>
+    <div>
+        <button onclick="window.print()" class="btn btn-print">Generate Report</button>
+        <a href="/logout" class="btn btn-logout">Logout</a>
+    </div>
+</header>
+
+<div class="container">
+    <h2>🚚 Orders Overview</h2>
+
+    <div class="legend">
+        <strong>Status:</strong>
+        <span class="pending">PENDING</span>
+        <span class="assigned">ASSIGNED</span>
+        <span class="shipped">SHIPPED</span>
+        <span class="delivered">DELIVERED</span>
+    </div>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Payment</th>
+            <th>Payment Status</th>
+            <th>Delivery Status</th>
+            <th>Address</th>
+            <th>Driver</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="o : ${orders}">
+            <td th:text="${o.id}"></td>
+            <td th:text="${o.user.username}"></td>
+            <td th:text="${o.totalAmount}"></td>
+            <td th:text="${o.paymentType}"></td>
+            <td th:text="${o.paymentStatus}"></td>
+            <td th:text="${o.deliveryStatus}"></td>
+            <td>
+                <div th:text="${o.addressLine1}"></div>
+                <small th:text="${o.city + ' - ' + o.postalCode}"></small>
+            </td>
+            <td>
+                <form class="inline" th:action="@{/delivery/assign}" method="post">
+                    <input type="hidden" name="orderId" th:value="${o.id}">
+                    <select name="driverId" required>
+                        <option value="">-- Select Driver --</option>
+                        <option th:each="d : ${drivers}"
+                                th:value="${d.id}"
+                                th:text="${d.name + ' (' + d.vehicleNumber + ') - ' + d.status}"
+                                th:if="${d.status == 'AVAILABLE'}"></option>
+                    </select>
+                    <button type="submit" class="btn btn-action">Assign</button>
+                </form>
+                <div th:if="${o.driver != null}">
+                    <small><strong>Current:</strong> <span th:text="${o.driver.name}"></span></small>
+                </div>
+            </td>
+            <td>
+                <form class="inline" th:action="@{/delivery/status}" method="post">
+                    <input type="hidden" name="orderId" th:value="${o.id}">
+                    <input type="hidden" name="status" value="RECEIVED">
+                    <button th:if="${o.deliveryStatus == 'ASSIGNED'}" type="submit" class="btn btn-received">Received</button>
+                </form>
+
+                <form class="inline" th:action="@{/delivery/status}" method="post">
+                    <input type="hidden" name="orderId" th:value="${o.id}">
+                    <input type="hidden" name="status" value="SHIPPED">
+                    <button th:if="${o.deliveryStatus == 'RECEIVED'}" type="submit" class="btn btn-ship">Ship</button>
+                </form>
+
+                <form class="inline" th:action="@{/delivery/status}" method="post">
+                    <input type="hidden" name="orderId" th:value="${o.id}">
+                    <input type="hidden" name="status" value="DELIVERED">
+                    <button th:if="${o.deliveryStatus == 'SHIPPED'}" type="submit" class="btn btn-deliver">Delivered</button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(orders)}">
+            <td colspan="9">No orders found.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2>👨‍✈️ Driver Overview</h2>
+
+    <form th:action="@{/delivery/drivers/add}" method="post" class="add-driver">
+        <input type="text" name="name" placeholder="Driver Name" required>
+        <input type="text" name="contactNumber" placeholder="Contact Number" required>
+        <input type="text" name="vehicleNumber" placeholder="Vehicle Number" required>
+        <button type="submit" class="btn btn-action">Add Driver</button>
+    </form>
+
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Contact</th>
+            <th>Vehicle</th>
+            <th>Status</th>
+            <th>Update</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="d : ${drivers}">
+            <td th:text="${d.id}"></td>
+            <td th:text="${d.name}"></td>
+            <td th:text="${d.contactNumber}"></td>
+            <td th:text="${d.vehicleNumber}"></td>
+            <td th:text="${d.status}"></td>
+            <td>
+                <form th:action="@{/delivery/drivers/status}" method="post" style="display:inline;">
+                    <input type="hidden" name="driverId" th:value="${d.id}">
+                    <select name="status">
+                        <option th:selected="${d.status == 'AVAILABLE'}">AVAILABLE</option>
+                        <option th:selected="${d.status == 'ON_DELIVERY'}">ON_DELIVERY</option>
+                        <option th:selected="${d.status == 'INACTIVE'}">INACTIVE</option>
+                    </select>
+                    <button type="submit" class="btn btn-action">Update</button>
+                </form>
+
+                <form th:action="@{/delivery/drivers/remove/{driverId}(driverId=${d.id})}" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-logout"
+                            onclick="return confirm('Are you sure you want to remove this driver?');">
+                        Remove
+                    </button>
+                </form>
+            </td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(drivers)}">
+            <td colspan="6">No drivers in the system yet.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="footer">
+    <p>© 2025 QuickMart | Delivery Manager Panel</p>
+</div>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8" />
+    <title>Welcome — QuickMart</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        /* Clean, modern supermarket landing — nicer visuals, accessible, no external assets */
+        :root{
+            --bg1: #fffdf6; /* warm cream */
+            --bg2: #f5faf5; /* soft green */
+            --brand: #f1c40f; /* yellow */
+            --brand-deep: #b08906;
+            --accent: #2f8f43; /* green */
+            --muted: #54606a;
+            --card: #ffffff;
+            --glass: rgba(255,255,255,0.75);
+            --radius: 16px;
+            --shadow-lg: 0 18px 40px rgba(12,24,36,0.08);
+            --shadow-md: 0 8px 20px rgba(12,24,36,0.06);
+            --max: 1220px;
+        }
+
+
+        *{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#0b1220;-webkit-font-smoothing:antialiased}
+
+body {
+    background: url('/images/welcomebg.jpeg') no-repeat center center fixed, linear-gradient(180deg,var(--bg1),var(--bg2));
+    background-size: cover, auto;
+}
+
+        .page{max-width:var(--max);margin:28px auto;padding:20px}
+
+        /* Header */
+        header{display:flex;align-items:center;gap:18px}
+        .brand{display:flex;align-items:center;gap:14px}
+        .brand img{width:88px;height:88px;border-radius:14px;object-fit:contain;box-shadow:var(--shadow-md)}
+        .brand h1{margin:0;font-size:22px;letter-spacing:-0.2px}
+        .brand p{margin:2px 0 0 0;color:var(--muted);font-size:13px}
+
+        /* Layout */
+        .layout{display:grid;grid-template-columns:1fr;gap:28px;margin-top:18px;align-items:start}
+
+        /* Hero card */
+        .hero{background:linear-gradient(180deg,rgba(255,255,255,0.9),#fff);border-radius:18px;padding:30px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;gap:18px}
+        .headline{font-size:34px;line-height:1.02;margin:0;color:#071024}
+        .sub{color:var(--muted);margin:0;font-size:16px}
+
+        /* Tiles grid */
+        .tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:6px}
+        .tile{background:linear-gradient(180deg,#fff,#fcfff7);border-radius:12px;padding:18px;border:1px solid rgba(0,0,0,0.04);display:flex;flex-direction:column;gap:10px;transition:transform .18s ease,box-shadow .18s ease;cursor:pointer}
+        .tile:focus,.tile:hover{transform:translateY(-6px);box-shadow:0 22px 48px rgba(12,24,36,0.09);outline:none}
+        .tile .title{font-weight:800;font-size:15px;color:#08101a}
+        .tile .desc{color:var(--muted);font-size:13px}
+        .tile .cta{margin-top:auto;display:inline-flex;align-items:center;gap:10px;padding:10px 14px;border-radius:10px;background:var(--accent);color:#fff;font-weight:800;border:none}
+        .tile .cta .arrow{display:inline-block;width:14px;height:14px;border-right:2px solid rgba(255,255,255,0.9);border-bottom:2px solid rgba(255,255,255,0.9);transform:rotate(-45deg)}
+
+        /* Right column (removed) */
+
+        /* Footnote */
+        .note{color:var(--muted);font-size:13px;margin-top:6px}
+
+        /* Accessibility focus */
+        .tile:focus-visible{box-shadow:0 0 0 4px rgba(47,143,67,0.12)}
+
+        /* Responsive */
+        @media (max-width:980px){.layout{grid-template-columns:1fr}.branding{justify-content:center}.brand img{width:72px;height:72px}.headline{font-size:26px}.tiles{grid-template-columns:1fr}}
+
+    </style>
+</head>
+<body>
+<div class="page">
+    <header>
+        <div class="brand">
+            <img src="/images/quickmart-logo.png" alt="QuickMart Logo" />
+            <div>
+                <h1>QuickMart — Online Supermarket</h1>
+                <p>Fresh groceries · Fast delivery · Local deals</p>
+            </div>
+        </div>
+    </header>
+
+
+    <div class="layout">
+        <main class="hero" role="main" aria-labelledby="welcome-heading">
+            <h2 id="welcome-heading" class="headline">Groceries at your door — fast, fresh & friendly.</h2>
+            <p class="sub">Welcome to QuickMart. Choose one of the actions below to continue — everything you need from pantry staples to fresh produce, delivered quickly.</p>
+
+            <div class="tiles" role="list">
+
+                <a role="listitem" tabindex="0" th:href="@{/login}" class="tile" aria-label="Login — already registered">
+                    <div class="title">Already registered?</div>
+                    <div class="desc">Sign in to view your orders, saved addresses and faster checkout.</div>
+                    <div class="cta" aria-hidden="true">Login Here <span class="arrow"></span></div>
+                </a>
+
+                <a role="listitem" tabindex="0" th:href="@{/register}" class="tile" aria-label="Register — new to QuickMart">
+                    <div class="title">New to QuickMart?</div>
+                    <div class="desc">Create an account for quicker checkouts and order tracking.</div>
+                    <div class="cta" aria-hidden="true">Register Here <span class="arrow"></span></div>
+                </a>
+
+                <a role="listitem" tabindex="0" th:href="@{/customer/track}" class="tile" aria-label="Track order">
+                    <div class="title">Track your order?</div>
+                    <div class="desc">Enter your order ID to see delivery status in real time.</div>
+                    <div class="cta" aria-hidden="true">Click here <span class="arrow"></span></div>
+                </a>
+
+                <a role="listitem" tabindex="0" th:href="@{/customer/dashboard}" class="tile" aria-label="Browse the store">
+                    <div class="title">Browse the store</div>
+                    <div class="desc">Explore categories, deals and our fresh selection.</div>
+                    <div class="cta" aria-hidden="true">Click here <span class="arrow"></span></div>
+                </a>
+
+            </div>
+
+            <p class="note">Tip: Register for order history and faster reordering. We keep your data secure and payments protected.</p>
+        </main>
+    </div>
+
+</div>
+
+
+<script>
+    // lightweight accessibility: allow Enter to trigger anchor tiles for keyboard-only users
+    document.querySelectorAll('.tile[tabindex]').forEach(el => {
+        el.addEventListener('keydown', e => { if(e.key === 'Enter' || e.key === ' ') el.click(); });
+    });
+</script>
+
+
+</body>
+</html>

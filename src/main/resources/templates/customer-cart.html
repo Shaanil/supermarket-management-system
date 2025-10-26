@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>QuickMart - Cart</title>
+    <style>
+        body {font-family: Arial, sans-serif; background: #f8f9fa; margin: 20px;}
+        table {width: 100%; border-collapse: collapse;}
+        th, td {border: 1px solid #ddd; padding: 10px; text-align: center;}
+        th {background: #007bff; color: white;}
+        img {width: 60px; height: 60px; object-fit: cover;}
+        h2 {text-align: center; color: #007bff;}
+        .total-row td {font-weight: bold; font-size: 18px;}
+        .checkout {background: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;}
+        .checkout:hover {background: #218838;}
+        a {text-decoration: none; color: red;}
+        .nav {margin-top: 15px; text-align: center;}
+    </style>
+</head>
+<body>
+<h2>Your Cart</h2>
+
+<table>
+    <tr>
+        <th>Image</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Qty</th>
+        <th>Subtotal</th>
+        <th>Action</th>
+    </tr>
+    <tr th:each="c : ${cartItems}">
+        <td><img th:src="${c.product.imageUrl}" alt="Product"></td>
+        <td th:text="${c.product.name}"></td>
+        <td th:text="${c.product.price}"></td>
+        <td th:text="${c.quantity}"></td>
+        <td th:text="${c.product.price * c.quantity}"></td>
+        <td><a th:href="@{'/customer/cart/remove/' + ${c.id}}">Remove</a></td>
+    </tr>
+    <tr class="total-row">
+        <td colspan="4" style="text-align:right;">Total:</td>
+        <td th:text="${totalPrice}"></td>
+        <td></td>
+    </tr>
+</table>
+
+<div class="nav">
+    <a href="/customer/dashboard">⬅️ Continue Shopping</a>
+    <form th:action="@{/customer/checkout}" method="post" style="display:inline;">
+        <button type="submit" class="checkout">Checkout</button>
+    </form>
+</div>
+
+</body>
+</html>

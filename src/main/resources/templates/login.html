@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>QuickMart — Login</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        :root{
+            --bg1: #fffdf6; /* warm cream */
+            --bg2: #f5faf5; /* soft green */
+            --brand: #f1c40f; /* yellow */
+            --brand-deep: #b08906;
+            --accent: #2f8f43; /* green */
+            --muted: #54606a;
+            --card: #ffffff;
+            --glass: rgba(255,255,255,0.75);
+            --radius: 16px;
+            --shadow-lg: 0 18px 40px rgba(12,24,36,0.08);
+            --shadow-md: 0 8px 20px rgba(12,24,36,0.06);
+            --max: 1220px;
+        }
+
+        *{box-sizing:border-box}
+        html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial;background:linear-gradient(180deg,var(--bg1),var(--bg2));color:#0b1220;-webkit-font-smoothing:antialiased}
+
+        body {
+            background: url('/images/welcomebg.jpeg') no-repeat center center fixed, linear-gradient(180deg,var(--bg1),var(--bg2));
+            background-size: cover, auto;
+        }
+
+        .page{max-width:var(--max);margin:28px auto;padding:20px}
+
+        header{display:flex;align-items:center;gap:18px}
+        .brand{display:flex;align-items:center;gap:14px}
+        .brand img{width:72px;height:72px;border-radius:14px;object-fit:contain;box-shadow:var(--shadow-md)}
+        .brand h1{margin:0;font-size:22px;letter-spacing:-0.2px}
+        .brand p{margin:2px 0 0 0;color:var(--muted);font-size:13px}
+
+        /* Centered card */
+        .wrap{display:grid;grid-template-columns:1fr;gap:24px;min-height:calc(100vh - 180px);place-content:center;justify-items:center}
+        .card{background:linear-gradient(180deg,rgba(255,255,255,0.95),#fff);border-radius:18px;padding:28px;box-shadow:var(--shadow-lg);max-width:460px}
+
+        .card h2{margin:0 0 6px 0;font-size:26px;letter-spacing:-0.2px}
+        .card .sub{margin:0 0 20px 0;color:var(--muted);font-size:14px}
+
+        form{display:grid;gap:14px}
+        label{font-weight:700;font-size:13px}
+        .field{display:grid;gap:8px}
+        .input{display:flex;align-items:center;border:1px solid rgba(0,0,0,0.08);border-radius:12px;padding:12px 14px;background:#fff;box-shadow:var(--shadow-md)}
+        .input input{border:none;outline:none;width:100%;font-size:15px;background:transparent}
+
+        .row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .row .left{display:flex;align-items:center;gap:8px}
+        .row a{font-size:13px;color:var(--accent);text-decoration:none}
+        .row a:hover{text-decoration:underline}
+
+        .btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+        .btn-primary{background:var(--accent);color:#fff;box-shadow:0 10px 24px rgba(47,143,67,0.28)}
+        .btn-primary:hover{transform:translateY(-2px)}
+        .btn-tertiary{background:transparent;color:#0b1220}
+
+        .note{color:var(--muted);font-size:13px}
+
+        .links{margin-top:14px;font-size:14px}
+        .links a{color:var(--accent);text-decoration:none}
+        .links a:hover{text-decoration:underline}
+
+        .sr-only{position:absolute;left:-9999px}
+
+        @media (min-width:860px){
+            .wrap{justify-items:center}
+        }
+        @media (max-width:520px){
+            .card{margin:0 10px}
+        }
+    </style>
+</head>
+<body>
+<div class="page">
+    <header>
+        <div class="brand">
+            <a href="/" aria-label="Back to welcome" style="display:inline-flex"><img src="/images/quickmart-logo.png" alt="QuickMart Logo" /></a>
+            <div>
+                <h1>QuickMart — Online Supermarket</h1>
+                <p>Fresh groceries · Fast delivery · Local deals</p>
+            </div>
+        </div>
+    </header>
+
+    <div class="wrap">
+        <main class="card" role="main" aria-labelledby="login-heading">
+            <h2 id="login-heading">Sign in</h2>
+            <p class="sub">Welcome back! Enter your details to access orders, saved addresses and faster checkout.</p>
+
+            <form th:action="@{/login}" method="post" aria-describedby="login-help">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <div class="input">
+                        <input id="username" name="username" type="text" autocomplete="username" placeholder="Your Usernaame" required>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label for="password">Password</label>
+                    <div class="input">
+                        <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Your password" required>
+                    </div>
+                </div>
+
+                <input type="hidden" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <button type="submit" class="btn btn-primary" aria-label="Sign in to QuickMart">Sign in</button>
+                <p id="login-help" class="sr-only">All fields are required.</p>
+            </form>
+
+            <div class="links" aria-live="polite">
+                Don't have an account? <a th:href="@{/register}" href="/register">Create one</a>.
+            </div>
+            <p class="note">Tip: Use the same email you use at checkout for order history.</p>
+        </main>
+    </div>
+</div>
+
+</script>
+</body>
+</html>

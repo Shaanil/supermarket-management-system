@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QuickMart — Delivery Addresses</title>
+  <meta name="theme-color" content="#ffffff" />
+  <style>
+    :root {
+      --bg:#ffffff; --surface:#f6f7f9; --ink:#111; --muted:#5f6368;
+      --accent:#06c167; --accent2:#0077ff; --danger:#d32f2f;
+      --wire:#e5e7eb; --card:#ffffff; --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:14px; --radius-sm:10px; --radius-lg:22px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+    header{position:sticky;top:0;z-index:5;backdrop-filter:saturate(140%) blur(10px);background:linear-gradient(90deg, rgba(255,255,255,.9), rgba(250,250,255,.9));border-bottom:1px solid var(--wire);}
+    header .bar{max-width:920px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:10px;align-items:center;font-weight:700}
+    .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 6px rgba(6,193,103,.12)}
+    main{max-width:920px;margin:24px auto;padding:0 18px;display:grid;gap:24px}
+    h1{font-size:24px;margin:0 0 10px}
+    h2{font-size:20px;margin:0 0 8px}
+    p.lead{color:var(--muted);margin:0 0 10px}
+    .card{background:var(--card);border:1px solid var(--wire);border-radius:var(--radius);box-shadow:var(--shadow);}
+    .pad{padding:20px}
+    table{width:100%;border-collapse:collapse;font-size:15px;margin-top:8px}
+    th,td{border:1px solid var(--wire);padding:10px;text-align:center;}
+    th{background:var(--accent);color:#fff;}
+    tr:hover td{background:var(--surface)}
+    input[type=text]{width:100%;padding:10px;border:1px solid var(--wire);border-radius:10px;margin-top:4px}
+    input[type=radio]{transform:scale(1.2)}
+    button{cursor:pointer;border:none;border-radius:10px;padding:10px 16px;font-weight:600;font-size:15px}
+    .btn-primary{background:var(--accent);color:#fff;border:1px solid var(--accent)}
+    .btn-primary:hover{background:#04a85a;border-color:#04a85a}
+    .btn-secondary{background:var(--surface);color:var(--ink);border:1px solid var(--wire)}
+    .row{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+    .note{font-size:13px;color:var(--muted)}
+    .space{height:12px}
+    a.btn-secondary{text-decoration:none;display:inline-block}
+    @media (max-width:600px){
+      main{padding:0 2vw;}
+      header .bar{padding:14px 4vw;}
+      .pad{padding:14px 4vw;}
+      table th, table td{padding:8px;}
+      h1{font-size:20px;}
+      h2{font-size:17px;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><span class="dot"></span> QuickMart</div>
+    <strong>Delivery</strong>
+  </div>
+</header>
+
+<main>
+  <section class="card pad">
+    <h1>Select a Delivery Address</h1>
+    <p class="lead">Choose an existing address or add a new one below.</p>
+
+    <form th:action="@{/customer/confirm-order}" method="post">
+      <table>
+        <thead>
+        <tr>
+          <th>Select</th>
+          <th>Label</th>
+          <th>Address</th>
+          <th>City</th>
+          <th>Postal Code</th>
+          <th>Contact</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="a : ${addresses}">
+          <td><input type="radio" name="addressId" th:value="${a.id}" required></td>
+          <td th:text="${a.label}">Home</td>
+          <td th:text="${a.line1}">Street</td>
+          <td th:text="${a.city}">City</td>
+          <td th:text="${a.postalCode}">00000</td>
+          <td th:text="${a.contactNumber}">123456789</td>
+        </tr>
+        </tbody>
+      </table>
+
+      <div class="row" style="justify-content:space-between;margin-top:10px">
+        <p style="margin:0"><strong>Total:</strong> <span th:text="'$' + ${total}">$0</span></p>
+        <button type="submit" class="btn-primary">Use Selected Address</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card pad">
+    <h2>Add a New Address</h2>
+    <form th:action="@{/customer/addresses/add}" method="post" class="grid">
+      <input type="text" name="label" placeholder="Label (Home/Office)" required>
+      <input type="text" name="line1" placeholder="Street Address" required>
+      <input type="text" name="city" placeholder="City" required>
+      <input type="text" name="postalCode" placeholder="Postal Code" required>
+      <input type="text" name="contactNumber" placeholder="Contact Number" required>
+      <div class="row" style="justify-content:space-between">
+        <a href="/customer/cart" class="btn-secondary">← Back to Cart</a>
+        <button type="submit" class="btn-primary">Add Address</button>
+      </div>
+    </form>
+  </section>
+</main>
+</body>
+</html>
