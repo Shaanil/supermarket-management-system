@@ -139,3 +139,15 @@ QuickMart/
 ├── mvnw
 ├── mvnw.cmd
 └── README.md
+
+### 👥 The Team
+
+* **J.G.H. Jayalath** (Product Owner) — User Management Portal & Role-Based Authentication.
+* **S.A.W. Fernando** (Scrum Master) — Customer Portal, Profile Logs & Shopping Cart Features.
+* **B.M.B.S. Alahakoon** — Inventory Management, Concurrency Control & Stock Synchronization.
+* **N. Thahani** — Marketing Management, Promotional Scheduling & Dynamic Renderings.
+* **M.G.M. Sanvidu** — Payment Portal Gateway Integration & Secure Transaction Control.
+* **P.A.S. Dinod** — Delivery Assignment Logic, Driver Modules & Notification Flows.
+
+## 📝 Project Context
+Developed for the **Software Engineering (SE2030)** module under the B.Sc. (Hons) in Information Technology degree at the Sri Lanka Institute of Information Technology (SLIIT).
