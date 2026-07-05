@@ -17,13 +17,13 @@ QuickMart is a web application designed to digitize and streamline supermarket o
 * **Delivery Coordination:** Assign drivers to orders, manage route tracking, and update dispatch milestones.
 * **Marketing Portal:** Create and schedule promotional banners, discount offers, and seasonal campaigns.
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 * **Frontend:** HTML, CSS, JavaScript
 * **Backend:** Java (Spring Boot, Spring Security)
 * **Database:** MySQL
 
-## 👥 The Team
+##  The Team
 
 * **J.G.H. Jayalath** (Product Owner) — User Management Portal & Role-Based Authentication.
 * **S.A.W. Fernando** (Scrum Master) — Customer Portal, Profile Logs & Shopping Cart Features.
@@ -32,5 +32,5 @@ QuickMart is a web application designed to digitize and streamline supermarket o
 * **M.G.M. Sanvidu** — Payment Portal Gateway Integration & Secure Transaction Control.
 * **P.A.S. Dinod** — Delivery Assignment Logic, Driver Modules & Notification Flows.
 
-## 📝 Project Context
+##  Project Context
 Developed for the **Software Engineering (SE2030)** module under the B.Sc. (Hons) in Information Technology degree at the Sri Lanka Institute of Information Technology (SLIIT).
