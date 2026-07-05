@@ -1,6 +1,6 @@
-# QuickMart — Web-Based Supermarket Ordering System
+# 🛒 QuickMart — Web-Based Supermarket Ordering System
 
-##  Overview
+## 📌 Overview
 
 QuickMart is a web-based supermarket ordering system developed as part of the **Software Engineering (SE2030)** module for the **B.Sc. (Hons) in Information Technology** degree at the **Sri Lanka Institute of Information Technology (SLIIT)**.
 
@@ -8,11 +8,11 @@ The system digitizes supermarket operations by enabling customers to shop online
 
 ---
 
-## What the Project Does
+## ⚙️ What the Project Does
 
 QuickMart is a full-stack web application built using Spring Boot that simulates a real-world e-commerce supermarket system.
 
-### Customer Features
+### 👤 Customer Features
 - User registration and login
 - Product browsing and search
 - Add products to cart
@@ -20,45 +20,45 @@ QuickMart is a full-stack web application built using Spring Boot that simulates
 - Place orders and view order history
 - Track order status
 
-### Admin Features
+### 🧑‍💼 Admin Features
 - Manage users and roles
 - Role-based access control
 - View system dashboard
 
-### Inventory Management
+### 📦 Inventory Management
 - Add, update, and delete products
 - Monitor stock levels
 - Handle product availability
 - Manage inventory data
 
-### Payment System
+### 💳 Payment System
 - Supports Card, PayPal, and Cash on Delivery (COD)
 - Secure payment processing using strategy-based design
 - Transaction tracking and logging
 
-### Delivery Management
+### 🚚 Delivery Management
 - Assign drivers to orders
 - Track delivery status
 - Update dispatch and delivery progress
 
-### Marketing Management
+### 📢 Marketing Management
 - Create and manage promotions
 - Schedule discount campaigns
 - Display promotional content dynamically
 
 ---
 
-## Why the Project is Useful
+## 💡 Why the Project is Useful
 
 QuickMart demonstrates how a complete e-commerce system can be built using modern software engineering principles.
 
-### Benefits for Users
+### 👤 Benefits for Users
 - Convenient online shopping experience
 - Real-time product availability
 - Secure payment options
 - Easy order tracking
 
-### Benefits for Businesses
+### 🏪 Benefits for Businesses
 - Centralized supermarket management system
 - Improved inventory control
 - Reduced manual workload and errors
@@ -66,21 +66,21 @@ QuickMart demonstrates how a complete e-commerce system can be built using moder
 - Efficient delivery coordination
 - Secure role-based system access
 
-### Academic Value
+### 🎓 Academic Value
 - Demonstrates real-world software engineering practices
 - Implements layered architecture (Controller, Service, Repository)
-- Uses design patterns (e.g., Strategy Pattern for payments)
+- Uses design patterns (Strategy Pattern for payments)
 - Applies Spring Boot and Spring Security concepts
 
 ---
 
-## Tech Stack
+## 🚀 Tech Stack
 
 ### Frontend
 - HTML
 - CSS
 - JavaScript
-- Thymeleaf (server-side rendering)
+- Thymeleaf
 
 ### Backend
 - Java
@@ -96,9 +96,9 @@ QuickMart demonstrates how a complete e-commerce system can be built using moder
 
 ---
 
-## Getting Started
+## 🏁 Getting Started
 
-### Prerequisites
+### 📋 Prerequisites
 - Java JDK 17+
 - Maven
 - MySQL Server
@@ -106,16 +106,64 @@ QuickMart demonstrates how a complete e-commerce system can be built using moder
 
 ---
 
-### Installation Steps
+### 📥 Installation Steps
 
 Clone the repository:
 ```bash
 git clone https://github.com/your-username/QuickMart.git
+```
 
+Navigate to the project directory:
+```bash
+cd QuickMart
+```
 
-### Project Structure
+---
 
-  
+### 🛠️ Database Setup
+
+Create a MySQL database:
+```sql
+CREATE DATABASE quickmart;
+```
+
+Configure database connection in:
+```
+src/main/resources/application.properties
+```
+
+Example:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/quickmart
+spring.datasource.username=root
+spring.datasource.password=your_password
+spring.jpa.hibernate.ddl-auto=update
+```
+
+---
+
+### ▶️ Run the Application
+
+Build the project:
+```bash
+mvn clean install
+```
+
+Run the application:
+```bash
+mvn spring-boot:run
+```
+
+Open in browser:
+```
+http://localhost:8080
+```
+
+---
+
+## 📁 Project Structure
+
+```
 QuickMart/
 ├── src/
 │   ├── main/
@@ -126,12 +174,10 @@ QuickMart/
 │   │   │   ├── Service/      # Business logic
 │   │   │   ├── Strategy/     # Payment strategy pattern
 │   │   │   └── QuickMartApplication.java
-│   │   │
-│   │   └── resources/
-│   │       ├── static/       # Images and static files
-│   │       ├── templates/    # HTML views (Thymeleaf)
-│   │       └── application.properties
-│   │
+│   │   ├── resources/
+│   │   │   ├── static/       # Images and static files
+│   │   │   ├── templates/    # HTML views (Thymeleaf)
+│   │   │   └── application.properties
 │   └── test/
 │       └── java/
 │
@@ -139,15 +185,39 @@ QuickMart/
 ├── mvnw
 ├── mvnw.cmd
 └── README.md
+```
 
-### 👥 The Team
+---
 
-* **J.G.H. Jayalath** (Product Owner) — User Management Portal & Role-Based Authentication.
-* **S.A.W. Fernando** (Scrum Master) — Customer Portal, Profile Logs & Shopping Cart Features.
-* **B.M.B.S. Alahakoon** — Inventory Management, Concurrency Control & Stock Synchronization.
-* **N. Thahani** — Marketing Management, Promotional Scheduling & Dynamic Renderings.
-* **M.G.M. Sanvidu** — Payment Portal Gateway Integration & Secure Transaction Control.
-* **P.A.S. Dinod** — Delivery Assignment Logic, Driver Modules & Notification Flows.
+## ❓ Getting Help
 
-## 📝 Project Context
-Developed for the **Software Engineering (SE2030)** module under the B.Sc. (Hons) in Information Technology degree at the Sri Lanka Institute of Information Technology (SLIIT).
+If you face any issues:
+
+- Check the code and configuration files
+- Contact any project team member
+- Consult your module instructor
+
+---
+
+## 👥 The Team
+
+This project was developed for the **Software Engineering (SE2030)** module at **SLIIT**.
+
+- **J.G.H. Jayalath** — Product Owner (User Management & Authentication)
+- **S.A.W. Fernando** — Scrum Master (Customer Portal & Cart System)
+- **B.M.B.S. Alahakoon** — Inventory Management & Stock Control
+- **N. Thahani** — Marketing & Promotions
+- **M.G.M. Sanvidu** — Payment Gateway Integration
+- **P.A.S. Dinod** — Delivery Management System
+
+---
+
+## 📌 Project Context
+
+Developed as an academic group project for the **Software Engineering (SE2030)** module under the **B.Sc. (Hons) in Information Technology** degree at **SLIIT**.
+
+---
+
+## 📌 Note
+
+This is an **academic university project** created for learning purposes. It is not intended for production deployment.
